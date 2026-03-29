@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionale Teatro Oratorio</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; }
+        header { background: #2c3e50; color: white; text-align: center; padding: 1rem; }
+        .admin-panel { background: #ffc107; padding: 10px; text-align: center; border-bottom: 2px solid #e0a800; position: sticky; top: 0; z-index: 100; }
+        button { padding: 8px 12px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; margin: 5px; }
+        #btn-modifica { background: #343a40; color: white; }
+        #btn-salva, #btn-aggiungi { background: #28a745; color: white; display: none; }
+        .container { max-width: 700px; margin: 20px auto; padding: 10px; }
+        .theme-banner { background: #e74c3c; color: white; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .avviso { background: #fff3cd; border-left: 5px solid #ffc107; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .editable-active { border: 2px dashed #333 !important; background: #fff !important; color: #333 !important; padding: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-panel">
+        🔐 Area Regista: 
+        <button id="btn-modifica" onclick="verificaPassword()">Modifica Sito</button>
+        <button id="btn-aggiungi" onclick="aggiungiAvviso()">+ Nuovo Avviso</button>
+        <button id="btn-salva" onclick="salvaTutto()">💾 Salva Modifiche</button>
+    </div>
+
+    <header>
+        <h1>Gruppo Teatrale Oratorio</h1>
+    </header>
+
+    <div class="container">
+        <div class="theme-banner" id="area-spettacolo">
+            <h2>Tema: "Chi cercate"</h2>
+            <p>Clicca qui per cambiare la descrizione dello spettacolo.</p>
+        </div>
+
+        <div class="card">
+            <h3>Bacheca Avvisi</h3>
+            <div id="area-bacheca">
+                <div class="avviso">Benvenuti nel nuovo sito del gruppo!</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PASS_CORRETTA = "PeppinoBomber";
+
+        window.onload = function() {
+            if(localStorage.getItem('teatro_spettacolo')) document.getElementById('area-spettacolo').innerHTML = localStorage.getItem('teatro_spettacolo');
+            if(localStorage.getItem('teatro_bacheca')) document.getElementById('area-bacheca').innerHTML = localStorage.getItem('teatro_bacheca');
+        };
+
+        function verificaPassword() {
+            let psw = prompt("Inserisci la password per modificare:");
+            if (psw === PASS_CORRETTA) {
+                attivaInterfaccia();
+            } else {
+                alert("Password errata! Accesso negato.");
+            }
+        }
+
+        function attivaInterfaccia() {
+            document.getElementById('area-spettacolo').contentEditable = "true";
+            document.getElementById('area-bacheca').contentEditable = "true";
+            document.getElementById('area-spettacolo').classList.add('editable-active');
+            document.getElementById('area-bacheca').classList.add('editable-active');
+            
+            document.getElementById('btn-modifica').style.display = "none";
+            document.getElementById('btn-salva').style.display = "inline-block";
+            document.getElementById('btn-aggiungi').style.display = "inline-block";
+        }
+
+        function aggiungiAvviso() {
+            const bacheca = document.getElementById('area-bacheca');
+            const dataOggi = new Date().toLocaleDateString('it-IT');
+            const nuovoAvviso = `<div class="avviso"><strong>${dataOggi}:</strong> Scrivi qui il nuovo avviso...</div>`;
+            bacheca.innerHTML = nuovoAvviso + bacheca.innerHTML;
+        }
+
+        function salvaTutto() {
+            localStorage.setItem('teatro_spettacolo', document.getElementById('area-spettacolo').innerHTML);
+            localStorage.setItem('teatro_bacheca', document.getElementById('area-bacheca').innerHTML);
+            
+            location.reload(); // Ricarica per bloccare le modifiche
+            alert("Sito aggiornato localmente!");
+        }
+    </script>
+</body>
+</html>
