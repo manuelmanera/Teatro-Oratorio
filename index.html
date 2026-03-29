@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionale Teatro Oratorio</title>
     <style>
-        body { font-family: sans-serif; margin: 0; background-color: #f4f4f9; }
-        header { background: #2c3e50; color: white; text-align: center; padding: 1rem; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f4f4f9; padding-bottom: 50px; }
+        header { background: #2c3e50; color: white; text-align: center; padding: 1.5rem; }
         .admin-panel { background: #ffc107; padding: 10px; text-align: center; border-bottom: 2px solid #e0a800; position: sticky; top: 0; z-index: 100; }
-        button { padding: 8px 12px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; margin: 5px; }
+        button { padding: 10px 15px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; margin: 5px; transition: 0.3s; }
         #btn-modifica { background: #343a40; color: white; }
         #btn-salva, #btn-aggiungi { background: #28a745; color: white; display: none; }
-        .container { max-width: 700px; margin: 20px auto; padding: 10px; }
-        .theme-banner { background: #e74c3c; color: white; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .avviso { background: #fff3cd; border-left: 5px solid #ffc107; padding: 10px; margin: 10px 0; border-radius: 4px; }
-        .editable-active { border: 2px dashed #333 !important; background: #fff !important; color: #333 !important; padding: 10px; }
+        .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
+        .theme-banner { background: #e74c3c; color: white; padding: 25px; text-align: center; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3); }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .avviso { background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 6px; color: #333; line-height: 1.5; }
+        .editable-active { border: 2px dashed #333 !important; background: #fff !important; color: #333 !important; padding: 10px; min-height: 50px; }
+        footer { text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -24,68 +25,91 @@
         🔐 Area Regista: 
         <button id="btn-modifica" onclick="verificaPassword()">Modifica Sito</button>
         <button id="btn-aggiungi" onclick="aggiungiAvviso()">+ Nuovo Avviso</button>
-        <button id="btn-salva" onclick="salvaTutto()">💾 Salva Modifiche</button>
+        <button id="btn-salva" onclick="salvaSuFirebase()">💾 Pubblica per Tutti</button>
     </div>
 
     <header>
         <h1>Gruppo Teatrale Oratorio</h1>
+        <p>Comunicazioni ufficiali del cast</p>
     </header>
 
     <div class="container">
         <div class="theme-banner" id="area-spettacolo">
             <h2>Tema: "Chi cercate"</h2>
-            <p>Clicca qui per cambiare la descrizione dello spettacolo.</p>
+            <p>Caricamento informazioni in corso...</p>
         </div>
 
         <div class="card">
             <h3>Bacheca Avvisi</h3>
             <div id="area-bacheca">
-                <div class="avviso">Benvenuti nel nuovo sito del gruppo!</div>
+                <p>Caricamento avvisi...</p>
             </div>
         </div>
+        <footer>&copy; 2026 Gruppo Teatrale - Gestito con Firebase</footer>
     </div>
 
-    <script>
-        const PASS_CORRETTA = "PeppinoBomber";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        window.onload = function() {
-            if(localStorage.getItem('teatro_spettacolo')) document.getElementById('area-spettacolo').innerHTML = localStorage.getItem('teatro_spettacolo');
-            if(localStorage.getItem('teatro_bacheca')) document.getElementById('area-bacheca').innerHTML = localStorage.getItem('teatro_bacheca');
+        const firebaseConfig = {
+            apiKey: "AIzaSyBELSJN5Kj8JfeeWPHIzkGrYzEHVHFG1_c",
+            authDomain: "teatro-oratorio.firebaseapp.com",
+            databaseURL: "https://teatro-oratorio-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "teatro-oratorio",
+            storageBucket: "teatro-oratorio.firebasestorage.app",
+            messagingSenderId: "180423891976",
+            appId: "1:180423891976:web:c241a695014dbc3f8d85bd"
         };
 
-        function verificaPassword() {
-            let psw = prompt("Inserisci la password per modificare:");
-            if (psw === PASS_CORRETTA) {
-                attivaInterfaccia();
-            } else {
-                alert("Password errata! Accesso negato.");
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const PASS_CORRETTA = "PeppinoBomber";
+
+        // 1. LEGGE I DATI DAL DATABASE IN TEMPO REALE
+        onValue(ref(db, 'teatro/'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById('area-spettacolo').innerHTML = data.spettacolo || "<h2>Tema: Chi cercate</h2>";
+                document.getElementById('area-bacheca').innerHTML = data.bacheca || "<div class='avviso'>Nessun avviso presente.</div>";
             }
+        });
+
+        // 2. FUNZIONI DI MODIFICA (SOLO PER TE)
+        window.verificaPassword = function() {
+            let psw = prompt("Inserisci la password 'PeppinoBomber' per modificare:");
+            if (psw === PASS_CORRETTA) {
+                document.getElementById('area-spettacolo').contentEditable = "true";
+                document.getElementById('area-bacheca').contentEditable = "true";
+                document.getElementById('area-spettacolo').classList.add('editable-active');
+                document.getElementById('area-bacheca').classList.add('editable-active');
+                document.getElementById('btn-modifica').style.display = "none";
+                document.getElementById('btn-salva').style.display = "inline-block";
+                document.getElementById('btn-aggiungi').style.display = "inline-block";
+            } else { alert("Accesso negato."); }
         }
 
-        function attivaInterfaccia() {
-            document.getElementById('area-spettacolo').contentEditable = "true";
-            document.getElementById('area-bacheca').contentEditable = "true";
-            document.getElementById('area-spettacolo').classList.add('editable-active');
-            document.getElementById('area-bacheca').classList.add('editable-active');
-            
-            document.getElementById('btn-modifica').style.display = "none";
-            document.getElementById('btn-salva').style.display = "inline-block";
-            document.getElementById('btn-aggiungi').style.display = "inline-block";
-        }
-
-        function aggiungiAvviso() {
+        window.aggiungiAvviso = function() {
             const bacheca = document.getElementById('area-bacheca');
             const dataOggi = new Date().toLocaleDateString('it-IT');
-            const nuovoAvviso = `<div class="avviso"><strong>${dataOggi}:</strong> Scrivi qui il nuovo avviso...</div>`;
+            const nuovoAvviso = `<div class="avviso"><strong>${dataOggi}:</strong> Nuovo avviso... clicca qui per scrivere.</div>`;
             bacheca.innerHTML = nuovoAvviso + bacheca.innerHTML;
         }
 
-        function salvaTutto() {
-            localStorage.setItem('teatro_spettacolo', document.getElementById('area-spettacolo').innerHTML);
-            localStorage.setItem('teatro_bacheca', document.getElementById('area-bacheca').innerHTML);
-            
-            location.reload(); // Ricarica per bloccare le modifiche
-            alert("Sito aggiornato localmente!");
+        // 3. SALVA I DATI SUL DATABASE DI GOOGLE
+        window.salvaSuFirebase = function() {
+            const spet = document.getElementById('area-spettacolo').innerHTML;
+            const bach = document.getElementById('area-bacheca').innerHTML;
+
+            set(ref(db, 'teatro/'), {
+                spettacolo: spet,
+                bacheca: bach
+            }).then(() => {
+                alert("Sincronizzazione completata! Ora tutti vedono le modifiche.");
+                location.reload();
+            }).catch((error) => {
+                alert("Errore nel salvataggio: " + error.message);
+            });
         }
     </script>
 </body>
