@@ -26,40 +26,40 @@
             border: 1px solid var(--border); 
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             outline: none;
-            min-height: 30px; /* Non sparisce mai se cancelli tutto */
+            min-height: 30px; 
         }
 
-        /* Il primo riquadro (Titolo) */
         .banner-box-titolo {
-            margin-bottom: 10px; /* Spazio tra il primo e il secondo riquadro */
+            margin-bottom: 10px; 
             font-size: 2rem !important; 
             font-weight: 900 !important; 
             text-transform: uppercase;
         }
-        /* Forza il grassetto anche se il browser prova a cambiarlo */
         .banner-box-titolo * { font-size: 2rem !important; font-weight: 900 !important; }
 
-        /* Il secondo riquadro (Descrizione) */
         .banner-box-desc {
-            margin-bottom: 25px; /* Spazio prima della bacheca */
+            margin-bottom: 25px; 
             font-size: 1.1rem !important; 
             font-weight: 400 !important; 
         }
-        /* Forza il testo normale anche se il browser prova a cambiarlo */
         .banner-box-desc * { font-size: 1.1rem !important; font-weight: 400 !important; }
 
-        /* Evidenzia il riquadro quando sei Manager */
         .edit-active { border: 2px dashed #ffc107 !important; background: #600000; }
 
-        /* Resto degli stili */
+        /* Avvisi e Bacheca */
         #nuovo-avviso-box { display: none; background: var(--card); padding: 15px; border-radius: 10px; border: 2px solid var(--accent); margin-bottom: 20px; }
         .input-admin { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: #0d1117; color: white; box-sizing: border-box; }
         .bacheca-container { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid var(--border); }
         .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; }
         .testo-avviso { font-size: 1.15rem; line-height: 1.5; margin-bottom: 15px; outline: none; }
         .testo-editabile { background: #1c2128; border: 1px dashed var(--accent); padding: 8px; border-radius: 4px; }
-        .footer-avviso { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 12px; }
+        
+        /* Footer della card con flex-wrap per evitare sovrapposizioni su mobile */
+        .footer-avviso { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 12px; }
         .btn-comm { background: #1f6feb; color: white; padding: 8px 20px; font-size: 0.9rem; }
+        .mgr-btns { gap: 5px; } /* Il display viene gestito direttamente via Javascript */
+
+        /* Modale */
         #modal-avviso { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; }
         .modal-content { max-width: 550px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
         .comm-item { background: #0d1117; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #58a6ff; }
@@ -114,116 +114,3 @@
             apiKey: "AIzaSyBELSJN5Kj8JfeeWPHIzkGrYzEHVHFG1_c",
             authDomain: "teatro-oratorio.firebaseapp.com",
             databaseURL: "https://teatro-oratorio-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "teatro-oratorio",
-            storageBucket: "teatro-oratorio.firebasestorage.app"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const PWD = "PeppinoBomber";
-        let isManager = false;
-        let avvisoAttivoID = "";
-
-        // Caricamento Dati
-        onValue(ref(db, 'teatro/'), (snapshot) => {
-            const data = snapshot.val() || {};
-            document.getElementById('banner-titolo').innerText = data.titolo_principale || "GRUPPO ORATORIO";
-            document.getElementById('banner-desc').innerText = data.descrizione_banner || "Comunicazioni Ufficiali";
-            renderBacheca(data.bacheca_dati || {});
-        });
-
-        function renderBacheca(dati) {
-            const container = document.getElementById('area-bacheca');
-            container.innerHTML = ""; 
-            let lista = Object.keys(dati).map(key => ({ id: key, ...dati[key] }));
-            lista.sort((a, b) => b.timestamp - a.timestamp);
-            lista.forEach((avv) => {
-                const card = document.createElement('div');
-                card.className = "avviso-card";
-                card.innerHTML = `
-                    <div id="txt-${avv.id}" class="testo-avviso ${isManager ? 'testo-editabile' : ''}" 
-                         contenteditable="${isManager}">${avv.testo}</div>
-                    <div class="footer-avviso">
-                        <small style="color:#8b949e">${avv.data}</small>
-                        <button class="btn-comm" onclick="apriCommenti('${avv.id}', \`${avv.testo.replace(/'/g, "\\'")}\`)">💬 Commenta</button>
-                        <div class="mgr-btns" style="${isManager ? 'display:flex' : 'none'}">
-                            <button onclick="salvaModifica('${avv.id}')" style="background:#1f6feb; color:white; font-size:0.75rem;">SALVA</button>
-                            <button onclick="eliminaAvviso('${avv.id}')" style="background:var(--danger); color:white; font-size:0.75rem;">ELIMINA</button>
-                        </div>
-                    </div>`;
-                container.appendChild(card);
-            });
-        }
-
-        window.login = function() {
-            if(prompt("Password Manager:") === PWD) { isManager = true; aggiornaVista(); }
-        };
-
-        window.logout = function() { isManager = false; aggiornaVista(); document.getElementById('nuovo-avviso-box').style.display = "none"; };
-
-        function aggiornaVista() {
-            const display = isManager ? "inline-block" : "none";
-            document.querySelectorAll(".btn-admin, .btn-reset, #btn-exit").forEach(b => b.style.display = display);
-            document.getElementById('btn-login').style.display = isManager ? "none" : "inline-block";
-            
-            const t = document.getElementById('banner-titolo');
-            const d = document.getElementById('banner-desc');
-            t.contentEditable = isManager;
-            d.contentEditable = isManager;
-            t.classList.toggle('edit-active', isManager);
-            d.classList.toggle('edit-active', isManager);
-
-            onValue(ref(db, 'teatro/bacheca_dati'), (s) => renderBacheca(s.val() || {}), {onlyOnce: true});
-        }
-
-        window.salvaTuttoBanner = function() {
-            update(ref(db, 'teatro/'), {
-                titolo_principale: document.getElementById('banner-titolo').innerText,
-                descrizione_banner: document.getElementById('banner-desc').innerText
-            }).then(() => alert("Intestazioni salvate correttamente!"));
-        };
-
-        window.apriCommenti = function(id, testo) {
-            avvisoAttivoID = id;
-            document.getElementById('modal-avviso').style.display = "block";
-            document.getElementById('testo-focus').innerText = testo;
-            onValue(ref(db, 'commenti_v3/' + id), (snapshot) => {
-                const div = document.getElementById('lista-commenti');
-                div.innerHTML = "";
-                snapshot.forEach((child) => {
-                    const c = child.val();
-                    if(c.tipo === 'privato' && !isManager) return;
-                    div.innerHTML += `<div class="comm-item">
-                        ${isManager ? `<span class="btn-del-comm" onclick="eliminaComm('${id}','${child.key}')">X</span>`:''}
-                        <b>${c.nome}</b>: ${c.testo}
-                    </div>`;
-                });
-            });
-        };
-
-        window.chiudiModale = function() { document.getElementById('modal-avviso').style.display = "none"; };
-        window.inviaMsg = function(tipo) {
-            const n = document.getElementById('nome-utente').value.trim();
-            const t = document.getElementById('testo-commento').value.trim();
-            if(!n) { alert("Nome obbligatorio!"); return; }
-            if(!t) return;
-            push(ref(db, 'commenti_v3/' + avvisoAttivoID), { nome: n, testo: t, tipo: tipo, ora: new Date().toLocaleString() });
-            document.getElementById('testo-commento').value = "";
-        };
-        window.eliminaComm = function(idA, idC) { if(confirm("Eliminare?")) remove(ref(db, `commenti_v3/${idA}/${idC}`)); };
-        window.resetTotale = function() { if(confirm("Svuota tutto?")) { set(ref(db, 'teatro/bacheca_dati'), null); set(ref(db, 'commenti_v3'), null); } };
-        window.eliminaAvviso = function(id) { if(confirm("Eliminare?")) remove(ref(db, 'teatro/bacheca_dati/' + id)); };
-        window.salvaModifica = function(id) {
-            update(ref(db, 'teatro/bacheca_dati/' + id), { testo: document.getElementById('txt-'+id).innerText }).then(() => alert("Salvato!"));
-        };
-        window.pubblicaNuovo = function() {
-            const t = document.getElementById('testo-nuovo').value;
-            if(!t) return;
-            push(ref(db, 'teatro/bacheca_dati'), { testo: t, data: new Date().toLocaleDateString(), timestamp: Date.now() });
-            document.getElementById('testo-nuovo').value = "";
-            document.getElementById('nuovo-avviso-box').style.display = 'none';
-        };
-        window.mostraBoxNuovo = function() { document.getElementById('nuovo-avviso-box').style.display = "block"; };
-    </script>
-</body>
-</html>
