@@ -15,6 +15,21 @@
         .theme-banner { background: #e74c3c; color: white; padding: 25px; text-align: center; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3); }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .avviso { background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 6px; color: #333; line-height: 1.5; }
+        
+        /* STILE PULSANTE LINK */
+        .btn-link { 
+            display: inline-block; 
+            margin-top: 10px; 
+            background: #3498db; 
+            color: white !important; 
+            text-decoration: none; 
+            padding: 8px 15px; 
+            border-radius: 5px; 
+            font-size: 0.85rem; 
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
         .editable-active { border: 2px dashed #333 !important; background: #fff !important; color: #333 !important; padding: 10px; min-height: 50px; }
         footer { text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-top: 20px; }
     </style>
@@ -41,7 +56,7 @@
         <div class="card">
             <h3>Bacheca Avvisi</h3>
             <div id="area-bacheca">
-                <p>Aggirnamento avvisi...</p>
+                <p>Aggiornamento avvisi...</p>
             </div>
         </div>
         <footer>&copy; 2026 Oratorio San Luigi | creato da Manuel Manera</footer>
@@ -51,7 +66,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // TUA CONFIGURAZIONE FIREBASE (Confermata funzionante)
         const firebaseConfig = {
             apiKey: "AIzaSyBELSJN5Kj8JfeeWPHIzkGrYzEHVHFG1_c",
             authDomain: "teatro-oratorio.firebaseapp.com",
@@ -64,37 +78,32 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        
-        // TUA CHIAVE SEGRETA (Nascondiamo il testo visibile)
         const CHIAVE_ACCESSO = "PeppinoBomber";
 
-        // 1. LEGGI I DATI DAL DATABASE DI GOOGLE IN TEMPO REALE
+        // Funzione per rilevare i link e creare pulsanti
+        function generaPulsantiLink(testo) {
+            const regexLink = /(https?:\/\/[^\s<>]+)/g;
+            return testo.replace(regexLink, function(url) {
+                return `<br><a href="${url}" target="_blank" class="btn-link">🔗 Visualizza Link</a>`;
+            });
+        }
+
         onValue(ref(db, 'teatro/'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 document.getElementById('area-spettacolo').innerHTML = data.spettacolo || "<h2>Tema: Chi cercate</h2>";
-                document.getElementById('area-bacheca').innerHTML = data.bacheca || "<div class='avviso'>Nessun avviso presente.</div>";
-            } else {
-                // Se il database è vuoto, mostriamo un contenuto di default
-                document.getElementById('area-spettacolo').innerHTML = "<h2>Tema: Da Definire</h2>";
-                document.getElementById('area-bacheca').innerHTML = "<div class='avviso'>Usa la modalità modifica per aggiungere il primo avviso.</div>";
+                // Mostriamo i link trasformati in pulsanti
+                document.getElementById('area-bacheca').innerHTML = generaPulsantiLink(data.bacheca || "<div class='avviso'>Nessun avviso presente.</div>");
             }
         });
 
-        // 2. FUNZIONI DI MODIFICA (Ora corrette per non mostrare la password)
         window.verificaPassword = function() {
-            // --- QUI C'ERA L'ERRORE ---
-            // Ho cambiato il testo da mostrare: ora è generico e sicuro.
             let psw = prompt("Inserisci il codice segreto:");
-            
             if (psw === CHIAVE_ACCESSO) {
-                // Abilita la modifica dei testi
                 document.getElementById('area-spettacolo').contentEditable = "true";
                 document.getElementById('area-bacheca').contentEditable = "true";
                 document.getElementById('area-spettacolo').classList.add('editable-active');
                 document.getElementById('area-bacheca').classList.add('editable-active');
-                
-                // Cambia i pulsanti nel pannello
                 document.getElementById('btn-modifica').style.display = "none";
                 document.getElementById('btn-salva').style.display = "inline-block";
                 document.getElementById('btn-aggiungi').style.display = "inline-block";
@@ -106,24 +115,30 @@
         window.aggiungiNuovoAvviso = function() {
             const bacheca = document.getElementById('area-bacheca');
             const dataOggi = new Date().toLocaleDateString('it-IT');
-            const nuovoAvviso = `<div class="avviso"><strong>${dataOggi}:</strong> Clicca qui per scrivere l'avviso...</div>`;
+            const nuovoAvviso = `<div class="avviso"><strong>${dataOggi}:</strong> Scrivi qui... se incolli un link apparirà un pulsante blu.</div>`;
             bacheca.innerHTML = nuovoAvviso + bacheca.innerHTML;
         }
 
-        // 3. SALVA I DATI SUL DATABASE DI GOOGLE (Aggiornamento istantaneo per tutti)
         window.pubblicaModifiche = function() {
+            let htmlBacheca = document.getElementById('area-bacheca').innerHTML;
+            
+            // Pulizia: rimuoviamo i pulsanti generati prima di salvare su DB
+            // per evitare che vengano salvati "fisicamente" nel testo
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlBacheca;
+            const linkButtons = tempDiv.querySelectorAll('.btn-link');
+            linkButtons.forEach(btn => btn.remove());
+            
             const spet = document.getElementById('area-spettacolo').innerHTML;
-            const bach = document.getElementById('area-bacheca').innerHTML;
+            const bachPulita = tempDiv.innerHTML;
 
             set(ref(db, 'teatro/'), {
                 spettacolo: spet,
-                bacheca: bach
+                bacheca: bachPulita
             }).then(() => {
-                alert("Aggiornamento completato con successo!");
-                location.reload(); // Ricarica per bloccare le modifiche
-            }).catch((error) => {
-                alert("Errore nel salvataggio: " + error.message);
-            });
+                alert("Sito aggiornato con successo!");
+                location.reload();
+            }).catch((e) => alert("Errore: " + e.message));
         }
     </script>
 </body>
