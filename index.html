@@ -9,7 +9,7 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
         
         .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.2s; }
+        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
         
         .btn-admin { background: var(--success); color: white; display: none; }
         .btn-reset { background: var(--danger); color: white; display: none; border: 2px solid black; }
@@ -17,51 +17,80 @@
         
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
         
-        /* Banner Rosso Diviso */
-        .theme-banner { background: #800000; padding: 25px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .banner-titolo { font-size: 1.8rem; font-weight: bold; margin: 0; display: block; outline: none; }
-        .banner-desc { font-size: 1.1rem; font-weight: normal; margin-top: 10px; display: block; opacity: 0.9; outline: none; }
-        .edit-mode { border: 1px dashed white; padding: 5px; border-radius: 4px; }
+        /* BANNER ROSSO STRUTTURATO */
+        .theme-banner { 
+            background: #800000; 
+            padding: 25px; 
+            text-align: center; 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
+        /* Forza il titolo a essere SEMPRE grassetto e grande */
+        .banner-titolo { 
+            font-size: 2rem !important; 
+            font-weight: 900 !important; 
+            text-transform: uppercase;
+            display: block;
+            min-height: 1.2em;
+            outline: none;
+        }
+
+        /* Forza la descrizione a essere SEMPRE normale */
+        .banner-desc { 
+            font-size: 1.1rem !important; 
+            font-weight: 400 !important; 
+            opacity: 0.9;
+            display: block;
+            min-height: 1.2em;
+            outline: none;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 10px;
+        }
+
+        .edit-active { border: 1px dashed rgba(255,255,255,0.5); border-radius: 4px; background: rgba(0,0,0,0.1); }
+
+        /* Resto degli stili (Avvisi e Modale) */
         #nuovo-avviso-box { display: none; background: var(--card); padding: 15px; border-radius: 10px; border: 2px solid var(--accent); margin-bottom: 20px; }
-        .input-admin { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: #0d1117; color: white; box-sizing: border-box; font-size: 1rem; }
-        
+        .input-admin { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: #0d1117; color: white; box-sizing: border-box; }
         .bacheca-container { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid var(--border); }
         .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; }
         .testo-avviso { font-size: 1.15rem; line-height: 1.5; margin-bottom: 15px; outline: none; }
         .testo-editabile { background: #1c2128; border: 1px dashed var(--accent); padding: 8px; border-radius: 4px; }
-        
-        .footer-avviso { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 12px; }
+        .footer-avviso { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 12px; }
         .btn-comm { background: #1f6feb; color: white; padding: 8px 20px; font-size: 0.9rem; }
-        
         #modal-avviso { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; }
-        .modal-content { max-width: 550px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; position: relative; border: 1px solid var(--border); }
-        .comm-item { background: #0d1117; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #58a6ff; position: relative; }
-        .btn-del-comm { color: var(--danger); cursor: pointer; float: right; font-size: 0.7rem; border: 1px solid var(--danger); padding: 2px 5px; border-radius: 4px; }
+        .modal-content { max-width: 550px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
+        .comm-item { background: #0d1117; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #58a6ff; }
     </style>
 </head>
 <body>
 
     <div class="admin-panel">
-        <button id="btn-login" onclick="login()">🔐 Accesso Manager</button>
+        <button id="btn-login" onclick="login()">🔐 Manager</button>
         <button class="btn-admin" onclick="mostraBoxNuovo()">+ Nuovo Avviso</button>
         <button class="btn-admin" onclick="salvaTuttoBanner()" style="background:#1f6feb">💾 Salva Intestazione</button>
-        <button id="btn-reset-all" class="btn-reset" onclick="resetTotale()">⚠️ RESET BACHECA</button>
-        <button id="btn-exit" class="btn-exit" onclick="logout()">👁️ Vista Utente</button>
+        <button id="btn-reset-all" class="btn-reset" onclick="resetTotale()">⚠️ RESET</button>
+        <button id="btn-exit" class="btn-exit" onclick="logout()">👁️ Esci</button>
     </div>
 
     <div class="container">
         <div class="theme-banner">
-            <span id="banner-titolo" class="banner-titolo">Titolo...</span>
-            <span id="banner-desc" class="banner-desc">Descrizione...</span>
+            <div id="banner-titolo" class="banner-titolo">TITOLO PRINCIPALE</div>
+            <div id="banner-desc" class="banner-desc">Scrivi qui la descrizione secondaria...</div>
         </div>
         
         <div id="nuovo-avviso-box">
-            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi un nuovo avviso..."></textarea>
+            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Nuovo messaggio..."></textarea>
             <button onclick="pubblicaNuovo()" style="background:var(--success); color:white; width:100%;">PUBBLICA</button>
         </div>
 
-        <h3>Bacheca Parrocchiale</h3>
+        <h3>Bacheca Ufficiale</h3>
         <div class="bacheca-container" id="area-bacheca"></div>
     </div>
 
@@ -75,7 +104,7 @@
             <textarea id="testo-commento" class="input-admin" placeholder="Scrivi risposta..."></textarea>
             <div style="display:flex; gap:10px;">
                 <button onclick="inviaMsg('pubblico')" style="background:var(--success); color:white; flex:1;">Pubblico</button>
-                <button onclick="inviaMsg('privato')" style="background:#800000; color:white; flex:1;">Privato 🔒</button>
+                <button onclick="inviaMsg('privato')" style="background:#800000; color:white; flex:1;">Manager 🔒</button>
             </div>
         </div>
     </div>
@@ -98,7 +127,7 @@
         let isManager = false;
         let avvisoAttivoID = "";
 
-        // Caricamento Dati Iniziali
+        // Caricamento Dati
         onValue(ref(db, 'teatro/'), (snapshot) => {
             const data = snapshot.val() || {};
             document.getElementById('banner-titolo').innerText = data.titolo_principale || "GRUPPO ORATORIO";
@@ -111,7 +140,6 @@
             container.innerHTML = ""; 
             let lista = Object.keys(dati).map(key => ({ id: key, ...dati[key] }));
             lista.sort((a, b) => b.timestamp - a.timestamp);
-
             lista.forEach((avv) => {
                 const card = document.createElement('div');
                 card.className = "avviso-card";
@@ -122,55 +150,42 @@
                         <small style="color:#8b949e">${avv.data}</small>
                         <button class="btn-comm" onclick="apriCommenti('${avv.id}', \`${avv.testo.replace(/'/g, "\\'")}\`)">💬 Commenta</button>
                         <div class="mgr-btns" style="${isManager ? 'display:flex' : 'none'}">
-                            <button onclick="salvaModifica('${avv.id}')" style="background:#1f6feb; color:white; font-size:0.7rem;">SALVA</button>
-                            <button onclick="eliminaAvviso('${avv.id}')" style="background:var(--danger); color:white; font-size:0.7rem;">ELIMINA</button>
+                            <button onclick="salvaModifica('${avv.id}')" style="background:#1f6feb; color:white; font-size:0.75rem;">SALVA</button>
+                            <button onclick="eliminaAvviso('${avv.id}')" style="background:var(--danger); color:white; font-size:0.75rem;">ELIMINA</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 container.appendChild(card);
             });
         }
 
         window.login = function() {
-            if(prompt("Password Manager:") === PWD) {
-                isManager = true;
-                aggiornaVista();
-            }
+            if(prompt("Password Manager:") === PWD) { isManager = true; aggiornaVista(); }
         };
 
-        window.logout = function() {
-            isManager = false;
-            aggiornaVista();
-            document.getElementById('nuovo-avviso-box').style.display = "none";
-        };
+        window.logout = function() { isManager = false; aggiornaVista(); document.getElementById('nuovo-avviso-box').style.display = "none"; };
 
         function aggiornaVista() {
             const display = isManager ? "inline-block" : "none";
             document.querySelectorAll(".btn-admin, .btn-reset, #btn-exit").forEach(b => b.style.display = display);
             document.getElementById('btn-login').style.display = isManager ? "none" : "inline-block";
             
-            // Attiva editing sul banner
             const t = document.getElementById('banner-titolo');
             const d = document.getElementById('banner-desc');
             t.contentEditable = isManager;
             d.contentEditable = isManager;
-            t.classList.toggle('edit-mode', isManager);
-            d.classList.toggle('edit-mode', isManager);
+            t.classList.toggle('edit-active', isManager);
+            d.classList.toggle('edit-active', isManager);
 
             onValue(ref(db, 'teatro/bacheca_dati'), (s) => renderBacheca(s.val() || {}), {onlyOnce: true});
         }
 
-        // Salvataggio Banner
         window.salvaTuttoBanner = function() {
-            const t = document.getElementById('banner-titolo').innerText;
-            const d = document.getElementById('banner-desc').innerText;
             update(ref(db, 'teatro/'), {
-                titolo_principale: t,
-                descrizione_banner: d
-            }).then(() => alert("Intestazione aggiornata!"));
+                titolo_principale: document.getElementById('banner-titolo').innerText,
+                descrizione_banner: document.getElementById('banner-desc').innerText
+            }).then(() => alert("Intestazione salvata!"));
         };
 
-        // Gestione Commenti (Uguale a prima)
         window.apriCommenti = function(id, testo) {
             avvisoAttivoID = id;
             document.getElementById('modal-avviso').style.display = "block";
@@ -181,16 +196,12 @@
                 snapshot.forEach((child) => {
                     const c = child.val();
                     if(c.tipo === 'privato' && !isManager) return;
-                    div.innerHTML += `<div class="comm-item ${c.tipo==='privato'?'comm-privato':''}">
-                        ${isManager ? `<span class="btn-del-comm" onclick="eliminaComm('${id}','${child.key}')">X</span>`:''}
-                        <b>${c.nome}</b>: ${c.testo}
-                    </div>`;
+                    div.innerHTML += `<div class="comm-item"><b>${c.nome}</b>: ${c.testo}</div>`;
                 });
             });
         };
 
         window.chiudiModale = function() { document.getElementById('modal-avviso').style.display = "none"; };
-
         window.inviaMsg = function(tipo) {
             const n = document.getElementById('nome-utente').value.trim();
             const t = document.getElementById('testo-commento').value.trim();
@@ -199,13 +210,10 @@
             push(ref(db, 'commenti_v3/' + avvisoAttivoID), { nome: n, testo: t, tipo: tipo, ora: new Date().toLocaleString() });
             document.getElementById('testo-commento').value = "";
         };
-
-        window.eliminaComm = function(idA, idC) { if(confirm("Eliminare?")) remove(ref(db, `commenti_v3/${idA}/${idC}`)); };
         window.resetTotale = function() { if(confirm("Svuota tutto?")) { set(ref(db, 'teatro/bacheca_dati'), null); set(ref(db, 'commenti_v3'), null); } };
         window.eliminaAvviso = function(id) { if(confirm("Eliminare?")) remove(ref(db, 'teatro/bacheca_dati/' + id)); };
         window.salvaModifica = function(id) {
-            const nt = document.getElementById('txt-'+id).innerText;
-            update(ref(db, 'teatro/bacheca_dati/' + id), { testo: nt }).then(() => alert("Salvato!"));
+            update(ref(db, 'teatro/bacheca_dati/' + id), { testo: document.getElementById('txt-'+id).innerText }).then(() => alert("Salvato!"));
         };
         window.pubblicaNuovo = function() {
             const t = document.getElementById('testo-nuovo').value;
@@ -218,4 +226,3 @@
     </script>
 </body>
 </html>
-
