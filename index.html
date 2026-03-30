@@ -8,42 +8,36 @@
         :root { --bg: #0b0e14; --card: #161b22; --border: #30363d; --accent: #ffc107; --danger: #e74c3c; --success: #238636; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
         
-        /* Pannello Superiore */
         .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
         button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.2s; }
-        button:active { transform: scale(0.95); }
         
         .btn-admin { background: var(--success); color: white; display: none; }
         .btn-reset { background: var(--danger); color: white; display: none; border: 2px solid black; }
         .btn-exit { background: #57606a; color: white; display: none; }
         
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
-        .theme-banner { background: #800000; padding: 25px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         
-        /* Box Creazione */
+        /* Banner Rosso Diviso */
+        .theme-banner { background: #800000; padding: 25px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .banner-titolo { font-size: 1.8rem; font-weight: bold; margin: 0; display: block; outline: none; }
+        .banner-desc { font-size: 1.1rem; font-weight: normal; margin-top: 10px; display: block; opacity: 0.9; outline: none; }
+        .edit-mode { border: 1px dashed white; padding: 5px; border-radius: 4px; }
+
         #nuovo-avviso-box { display: none; background: var(--card); padding: 15px; border-radius: 10px; border: 2px solid var(--accent); margin-bottom: 20px; }
         .input-admin { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: #0d1117; color: white; box-sizing: border-box; font-size: 1rem; }
         
-        /* Bacheca */
         .bacheca-container { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid var(--border); }
         .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; }
         .testo-avviso { font-size: 1.15rem; line-height: 1.5; margin-bottom: 15px; outline: none; }
         .testo-editabile { background: #1c2128; border: 1px dashed var(--accent); padding: 8px; border-radius: 4px; }
         
-        /* Footer Card */
         .footer-avviso { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 12px; }
-        .btn-comm { background: #1f6feb; color: white; padding: 8px 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
-        .mgr-btns { display: none; gap: 5px; }
+        .btn-comm { background: #1f6feb; color: white; padding: 8px 20px; font-size: 0.9rem; }
         
-        /* Modale Commenti */
-        #modal-avviso { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
+        #modal-avviso { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; }
         .modal-content { max-width: 550px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; position: relative; border: 1px solid var(--border); }
-        .close-modal { position: absolute; top: 15px; right: 15px; background: var(--danger); color: white; padding: 5px 10px; }
-        
-        .lista-commenti { margin: 20px 0; max-height: 300px; overflow-y: auto; }
         .comm-item { background: #0d1117; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #58a6ff; position: relative; }
-        .comm-privato { border-left-color: var(--danger); background: #251a1a; }
-        .btn-del-comm { color: var(--danger); cursor: pointer; font-weight: bold; padding: 5px; float: right; border: 1px solid var(--danger); border-radius: 4px; font-size: 0.7rem; }
+        .btn-del-comm { color: var(--danger); cursor: pointer; float: right; font-size: 0.7rem; border: 1px solid var(--danger); padding: 2px 5px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -51,17 +45,20 @@
     <div class="admin-panel">
         <button id="btn-login" onclick="login()">🔐 Accesso Manager</button>
         <button class="btn-admin" onclick="mostraBoxNuovo()">+ Nuovo Avviso</button>
-        <button class="btn-admin" onclick="salvaTitolo()" style="background:#1f6feb">💾 Salva Titolo</button>
+        <button class="btn-admin" onclick="salvaTuttoBanner()" style="background:#1f6feb">💾 Salva Intestazione</button>
         <button id="btn-reset-all" class="btn-reset" onclick="resetTotale()">⚠️ RESET BACHECA</button>
         <button id="btn-exit" class="btn-exit" onclick="logout()">👁️ Vista Utente</button>
     </div>
 
     <div class="container">
-        <div class="theme-banner" id="area-spettacolo"><h2>Caricamento...</h2></div>
+        <div class="theme-banner">
+            <span id="banner-titolo" class="banner-titolo">Titolo...</span>
+            <span id="banner-desc" class="banner-desc">Descrizione...</span>
+        </div>
         
         <div id="nuovo-avviso-box">
-            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi un nuovo avviso qui..."></textarea>
-            <button onclick="pubblicaNuovo()" style="background:var(--success); color:white; width:100%;">PUBBLICA IN BACHECA</button>
+            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi un nuovo avviso..."></textarea>
+            <button onclick="pubblicaNuovo()" style="background:var(--success); color:white; width:100%;">PUBBLICA</button>
         </div>
 
         <h3>Bacheca Parrocchiale</h3>
@@ -70,19 +67,15 @@
 
     <div id="modal-avviso">
         <div class="modal-content">
-            <button class="close-modal" onclick="chiudiModale()">CHIUDI X</button>
-            <h4 id="testo-focus" style="margin-top:30px; color:var(--accent); line-height:1.4;"></h4>
-            
-            <div id="lista-commenti" class="lista-commenti"></div>
-            
+            <button style="float:right; background:var(--danger); color:white;" onclick="chiudiModale()">X</button>
+            <h4 id="testo-focus" style="margin-top:30px; color:var(--accent);"></h4>
+            <div id="lista-commenti" style="margin:20px 0; max-height:250px; overflow-y:auto;"></div>
             <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
-            
-            <input type="text" id="nome-utente" class="input-admin" placeholder="Tuo Nome (Obbligatorio)">
-            <textarea id="testo-commento" class="input-admin" placeholder="Scrivi la tua risposta..."></textarea>
-            
+            <input type="text" id="nome-utente" class="input-admin" placeholder="Tuo Nome">
+            <textarea id="testo-commento" class="input-admin" placeholder="Scrivi risposta..."></textarea>
             <div style="display:flex; gap:10px;">
-                <button onclick="inviaMsg('pubblico')" style="background:var(--success); color:white; flex:1;">Invia Pubblico</button>
-                <button onclick="inviaMsg('privato')" style="background:#800000; color:white; flex:1;">Messaggio Privato 🔒</button>
+                <button onclick="inviaMsg('pubblico')" style="background:var(--success); color:white; flex:1;">Pubblico</button>
+                <button onclick="inviaMsg('privato')" style="background:#800000; color:white; flex:1;">Privato 🔒</button>
             </div>
         </div>
     </div>
@@ -105,10 +98,11 @@
         let isManager = false;
         let avvisoAttivoID = "";
 
-        // Sincronizzazione Dati
+        // Caricamento Dati Iniziali
         onValue(ref(db, 'teatro/'), (snapshot) => {
             const data = snapshot.val() || {};
-            document.getElementById('area-spettacolo').innerHTML = data.spettacolo || "<h2>Gruppo Oratorio</h2>";
+            document.getElementById('banner-titolo').innerText = data.titolo_principale || "GRUPPO ORATORIO";
+            document.getElementById('banner-desc').innerText = data.descrizione_banner || "Comunicazioni Ufficiali";
             renderBacheca(data.bacheca_dati || {});
         });
 
@@ -118,12 +112,9 @@
             let lista = Object.keys(dati).map(key => ({ id: key, ...dati[key] }));
             lista.sort((a, b) => b.timestamp - a.timestamp);
 
-            if(lista.length === 0) container.innerHTML = "<p style='text-align:center; color:#8b949e;'>Nessun avviso in bacheca.</p>";
-
             lista.forEach((avv) => {
                 const card = document.createElement('div');
                 card.className = "avviso-card";
-
                 card.innerHTML = `
                     <div id="txt-${avv.id}" class="testo-avviso ${isManager ? 'testo-editabile' : ''}" 
                          contenteditable="${isManager}">${avv.testo}</div>
@@ -140,9 +131,8 @@
             });
         }
 
-        // Sistema di Login/Logout
         window.login = function() {
-            if(prompt("Inserisci Password Manager:") === PWD) {
+            if(prompt("Password Manager:") === PWD) {
                 isManager = true;
                 aggiornaVista();
             }
@@ -158,29 +148,43 @@
             const display = isManager ? "inline-block" : "none";
             document.querySelectorAll(".btn-admin, .btn-reset, #btn-exit").forEach(b => b.style.display = display);
             document.getElementById('btn-login').style.display = isManager ? "none" : "inline-block";
-            document.getElementById('area-spettacolo').contentEditable = isManager;
+            
+            // Attiva editing sul banner
+            const t = document.getElementById('banner-titolo');
+            const d = document.getElementById('banner-desc');
+            t.contentEditable = isManager;
+            d.contentEditable = isManager;
+            t.classList.toggle('edit-mode', isManager);
+            d.classList.toggle('edit-mode', isManager);
+
             onValue(ref(db, 'teatro/bacheca_dati'), (s) => renderBacheca(s.val() || {}), {onlyOnce: true});
         }
 
-        // Gestione Commenti
+        // Salvataggio Banner
+        window.salvaTuttoBanner = function() {
+            const t = document.getElementById('banner-titolo').innerText;
+            const d = document.getElementById('banner-desc').innerText;
+            update(ref(db, 'teatro/'), {
+                titolo_principale: t,
+                descrizione_banner: d
+            }).then(() => alert("Intestazione aggiornata!"));
+        };
+
+        // Gestione Commenti (Uguale a prima)
         window.apriCommenti = function(id, testo) {
             avvisoAttivoID = id;
             document.getElementById('modal-avviso').style.display = "block";
             document.getElementById('testo-focus').innerText = testo;
-            
             onValue(ref(db, 'commenti_v3/' + id), (snapshot) => {
                 const div = document.getElementById('lista-commenti');
                 div.innerHTML = "";
                 snapshot.forEach((child) => {
                     const c = child.val();
                     if(c.tipo === 'privato' && !isManager) return;
-                    
-                    div.innerHTML += `
-                        <div class="comm-item ${c.tipo==='privato'?'comm-privato':''}">
-                            ${isManager ? `<span class="btn-del-comm" onclick="eliminaComm('${id}','${child.key}')">ELIMINA</span>`:''}
-                            <b>${c.nome}</b>: ${c.testo}
-                            <br><small style="color:#8b949e; font-size:0.7rem;">${c.ora || ''}</small>
-                        </div>`;
+                    div.innerHTML += `<div class="comm-item ${c.tipo==='privato'?'comm-privato':''}">
+                        ${isManager ? `<span class="btn-del-comm" onclick="eliminaComm('${id}','${child.key}')">X</span>`:''}
+                        <b>${c.nome}</b>: ${c.testo}
+                    </div>`;
                 });
             });
         };
@@ -190,58 +194,28 @@
         window.inviaMsg = function(tipo) {
             const n = document.getElementById('nome-utente').value.trim();
             const t = document.getElementById('testo-commento').value.trim();
-            
-            if(!n) { alert("Inserisci il tuo nome!"); return; }
+            if(!n) { alert("Nome obbligatorio!"); return; }
             if(!t) return;
-
-            push(ref(db, 'commenti_v3/' + avvisoAttivoID), {
-                nome: n, testo: t, tipo: tipo, ora: new Date().toLocaleString()
-            }).then(() => {
-                document.getElementById('testo-commento').value = "";
-            });
+            push(ref(db, 'commenti_v3/' + avvisoAttivoID), { nome: n, testo: t, tipo: tipo, ora: new Date().toLocaleString() });
+            document.getElementById('testo-commento').value = "";
         };
 
-        window.eliminaComm = function(idA, idC) { 
-            if(confirm("Vuoi rimuovere questo commento?")) {
-                remove(ref(db, `commenti_v3/${idA}/${idC}`));
-            }
-        };
-
-        // Funzioni Admin
-        window.resetTotale = function() {
-            if(confirm("⚠️ AZIONE IRREVERSIBILE: Vuoi svuotare tutta la bacheca e tutti i commenti?")) {
-                set(ref(db, 'teatro/bacheca_dati'), null);
-                set(ref(db, 'commenti_v3'), null);
-                alert("Bacheca azzerata.");
-            }
-        };
-
-        window.eliminaAvviso = function(id) { 
-            if(confirm("Eliminare l'avviso selezionato?")) remove(ref(db, 'teatro/bacheca_dati/' + id)); 
-        };
-
+        window.eliminaComm = function(idA, idC) { if(confirm("Eliminare?")) remove(ref(db, `commenti_v3/${idA}/${idC}`)); };
+        window.resetTotale = function() { if(confirm("Svuota tutto?")) { set(ref(db, 'teatro/bacheca_dati'), null); set(ref(db, 'commenti_v3'), null); } };
+        window.eliminaAvviso = function(id) { if(confirm("Eliminare?")) remove(ref(db, 'teatro/bacheca_dati/' + id)); };
         window.salvaModifica = function(id) {
             const nt = document.getElementById('txt-'+id).innerText;
-            update(ref(db, 'teatro/bacheca_dati/' + id), { testo: nt }).then(() => alert("Testo aggiornato!"));
+            update(ref(db, 'teatro/bacheca_dati/' + id), { testo: nt }).then(() => alert("Salvato!"));
         };
-
         window.pubblicaNuovo = function() {
             const t = document.getElementById('testo-nuovo').value;
             if(!t) return;
-            push(ref(db, 'teatro/bacheca_dati'), { 
-                testo: t, 
-                data: new Date().toLocaleDateString(), 
-                timestamp: Date.now() 
-            });
+            push(ref(db, 'teatro/bacheca_dati'), { testo: t, data: new Date().toLocaleDateString(), timestamp: Date.now() });
             document.getElementById('testo-nuovo').value = "";
             document.getElementById('nuovo-avviso-box').style.display = 'none';
         };
-
-        window.salvaTitolo = function() {
-            set(ref(db, 'teatro/spettacolo'), document.getElementById('area-spettacolo').innerHTML).then(() => alert("Titolo bacheca salvato!"));
-        };
-
         window.mostraBoxNuovo = function() { document.getElementById('nuovo-avviso-box').style.display = "block"; };
     </script>
 </body>
 </html>
+
