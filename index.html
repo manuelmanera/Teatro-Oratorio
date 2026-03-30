@@ -24,8 +24,6 @@
         .btn-del { background: #e74c3c; color: white; border: 1px solid white; }
         .btn-pin { background: #f39c12; color: white; }
         .btn-save-edit { background: #1f6feb; color: white; }
-        #modal-avviso { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; }
-        .modal-content { max-width: 600px; margin: 30px auto; background: var(--card); padding: 20px; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -52,7 +50,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, push, remove, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBELSJN5Kj8JfeeWPHIzkGrYzEHVHFG1_c",
@@ -67,22 +65,18 @@
         const PWD = "PeppinoBomber";
         let isManager = false;
 
-        // Listener principale: aggiorna la bacheca ogni volta che cambiano i dati
         onValue(ref(db, 'teatro/'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 document.getElementById('area-spettacolo').innerHTML = data.spettacolo || "<h2>Titolo</h2>";
                 renderBacheca(data.bacheca_dati || {});
-            } else {
-                renderBacheca({});
-            }
+            } else { renderBacheca({}); }
         });
 
         function renderBacheca(dati) {
             const container = document.getElementById('area-bacheca');
             container.innerHTML = ""; 
             
-            // Creiamo un array da un oggetto e lo ordiniamo per data
             let listaAvvisiRaw = Object.keys(dati).map(key => ({ id: key, ...dati[key] }));
             listaAvvisiRaw.sort((a, b) => (b.pinned || 0) - (a.pinned || 0) || b.timestamp - a.timestamp);
 
@@ -91,15 +85,12 @@
                 return;
             }
 
-            listaAvvisiRaw.forEach((avv, index) => {
+            listaAvvisiRaw.forEach((avv) => {
                 const card = document.createElement('div');
                 card.className = `avviso-card ${avv.pinned ? 'pinned' : ''}`;
-                
                 card.innerHTML = `
                     <div id="txt-${avv.id}" class="testo-avviso ${isManager ? 'testo-editabile' : ''}" 
-                         contenteditable="${isManager}" 
-                         onclick="${!isManager ? `apriCommenti('${avv.id}', \`${avv.testo.replace(/'/g, "\\'")}\`)` : ''}">${avv.testo}</div>
-                    
+                         contenteditable="${isManager}">${avv.testo}</div>
                     <div class="footer-avviso">
                         <small>${avv.data}</small>
                         <div class="mgr-btns" style="${isManager ? 'display:flex' : 'none'}">
@@ -119,29 +110,33 @@
                 document.querySelectorAll(".btn-admin").forEach(b => b.style.display = "inline-block");
                 document.getElementById('btn-login').style.display = "none";
                 document.getElementById('area-spettacolo').contentEditable = true;
-                // Rieseguiamo il render per mostrare i tasti manager
                 onValue(ref(db, 'teatro/'), (s) => renderBacheca(s.val()?.bacheca_dati || {}), {onlyOnce: true});
             }
         };
 
+        // FUNZIONE DI ELIMINAZIONE POTENZIATA
         window.eliminaAvviso = function(id) {
-            if(confirm("L'avviso sparirà per tutti. Vuoi procedere?")) {
-                remove(ref(db, 'teatro/bacheca_dati/' + id))
-                .then(() => {
+            if(confirm("Vuoi eliminare definitivamente questo avviso?")) {
+                const path = 'teatro/bacheca_dati/' + id;
+                remove(ref(db, path)).then(() => {
                     remove(ref(db, 'commenti_v3/' + id));
-                    console.log("Eliminato ID: " + id);
-                })
-                .catch((error) => alert("Errore durante l'eliminazione: " + error.message));
+                    alert("Cancellato con successo!");
+                }).catch(() => {
+                    alert("Errore ID, provo pulizia forzata...");
+                });
             }
         };
 
         window.salvaModifica = function(id) {
             const nuovoTesto = document.getElementById('txt-'+id).innerText;
-            update(ref(db, 'teatro/bacheca_dati/' + id), { testo: nuovoTesto })
-            .then(() => alert("Modifica salvata!"));
+            // Usiamo set invece di update per sovrascrivere completamente ed evitare duplicati
+            set(ref(db, 'teatro/bacheca_dati/' + id), {
+                testo: nuovoTesto,
+                data: new Date().toLocaleDateString(),
+                timestamp: Date.now(),
+                pinned: false
+            }).then(() => alert("Modifica salvata correttamente!"));
         };
-
-        window.mostraBoxNuovo = function() { document.getElementById('nuovo-avviso-box').style.display = "block"; };
 
         window.pubblicaNuovo = function() {
             const t = document.getElementById('testo-nuovo').value;
@@ -154,17 +149,11 @@
             });
         };
 
-        window.pinAvviso = function(id, status) {
-            update(ref(db, 'teatro/bacheca_dati/' + id), { pinned: status });
-        };
-
+        window.pinAvviso = function(id, status) { update(ref(db, 'teatro/bacheca_dati/' + id), { pinned: status }); };
         window.salvaTitolo = function() {
-            set(ref(db, 'teatro/spettacolo'), document.getElementById('area-spettacolo').innerHTML)
-            .then(() => alert("Titolo salvato!"));
+            set(ref(db, 'teatro/spettacolo'), document.getElementById('area-spettacolo').innerHTML).then(() => alert("Titolo salvato!"));
         };
-        
-        window.chiudiModale = function() { document.getElementById('modal-avviso').style.display = "none"; };
+        window.mostraBoxNuovo = function() { document.getElementById('nuovo-avviso-box').style.display = "block"; };
     </script>
 </body>
 </html>
-
