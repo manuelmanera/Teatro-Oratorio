@@ -19,32 +19,48 @@
         .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 15px; margin-bottom: 15px; border-radius: 6px; }
         .testo-avviso { font-size: 1.1rem; line-height: 1.4; margin-bottom: 10px; outline: none; }
         .testo-editabile { background: #1c2128; border: 1px dashed var(--accent); padding: 5px; border-radius: 4px; }
-        .btn-link-blu { display: inline-block; background: #1f6feb; color: white; text-decoration: none; padding: 8px 15px; border-radius: 6px; margin-top: 10px; font-weight: bold; }
-        .mgr-btns { display: none; gap: 5px; margin-top: 10px; width: 100%; justify-content: flex-end; }
-        footer { text-align: center; color: #8b949e; font-size: 0.8rem; margin: 30px 0; }
+        .footer-avviso { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 10px; }
+        .btn-comm { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 5px 10px; font-size: 0.8rem; }
+        .mgr-btns { display: none; gap: 5px; }
+        
+        /* MODALE COMMENTI */
+        #modal-avviso { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; }
+        .modal-content { max-width: 600px; margin: 30px auto; background: var(--card); padding: 20px; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .comm-item { background: #1c2128; padding: 10px; border-radius: 6px; margin-bottom: 8px; border-left: 4px solid #58a6ff; }
+        .comm-privato { border-left-color: #e74c3c; background: #251a1a; }
     </style>
 </head>
 <body>
 
     <div class="admin-panel">
-        <button id="btn-login" onclick="login()">🔐 Accesso Manager</button>
-        <button class="btn-admin" onclick="mostraBoxNuovo()">+ Nuovo Avviso</button>
-        <button class="btn-admin" onclick="salvaTitolo()" style="background:#1f6feb">💾 Salva Titolo</button>
-        <button id="btn-reset-all" class="btn-reset" onclick="resetTotale()">⚠️ RESET BACHECA</button>
+        <button id="btn-login" onclick="login()">🔐 Manager</button>
+        <button class="btn-admin" onclick="mostraBoxNuovo()">+ Nuovo</button>
+        <button class="btn-admin" onclick="salvaTitolo()">💾 Titolo</button>
+        <button id="btn-reset-all" class="btn-reset" onclick="resetTotale()">⚠️ RESET</button>
     </div>
 
     <div class="container">
         <div class="theme-banner" id="area-spettacolo"><h2>Caricamento...</h2></div>
-        
         <div id="nuovo-avviso-box">
-            <h4>Scrivi Messaggio (incolla link se vuoi)</h4>
-            <textarea id="testo-nuovo" class="input-admin" rows="3"></textarea>
+            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi avviso..."></textarea>
             <button onclick="pubblicaNuovo()" style="background:#238636; color:white; width:100%;">PUBBLICA</button>
         </div>
-
-        <h3>Bacheca Comunicazioni</h3>
         <div class="bacheca-container" id="area-bacheca"></div>
-        <footer>&copy; 2026 Oratorio San Luigi | creato da Manuel Manera</footer>
+    </div>
+
+    <div id="modal-avviso">
+        <div class="modal-content">
+            <button onclick="chiudiModale()" style="float:right; background:var(--danger); color:white;">X</button>
+            <h4 id="testo-focus" style="margin-top:30px; color:var(--accent);"></h4>
+            <div id="lista-commenti"></div>
+            <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
+            <input type="text" id="nome-utente" class="input-admin" placeholder="Tuo Nome">
+            <textarea id="testo-commento" class="input-admin" placeholder="Scrivi risposta..."></textarea>
+            <div style="display:flex; gap:10px;">
+                <button onclick="inviaMsg('pubblico')" style="background:#238636; color:white; flex:1;">Pubblico</button>
+                <button onclick="inviaMsg('privato')" style="background:#800000; color:white; flex:1;">Privato 🔒</button>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -63,6 +79,7 @@
         const db = getDatabase(app);
         const PWD = "PeppinoBomber";
         let isManager = false;
+        let avvisoAttivoID = "";
 
         onValue(ref(db, 'teatro/'), (snapshot) => {
             const data = snapshot.val() || {};
@@ -76,28 +93,18 @@
             let lista = Object.keys(dati).map(key => ({ id: key, ...dati[key] }));
             lista.sort((a, b) => b.timestamp - a.timestamp);
 
-            if (lista.length === 0) {
-                container.innerHTML = "<p style='text-align:center; color:#8b949e;'>Nessun avviso presente.</p>";
-                return;
-            }
-
             lista.forEach((avv) => {
                 const card = document.createElement('div');
                 card.className = "avviso-card";
-                
-                // Trova eventuali link nel testo
-                const urlRegex = /(https?:\/\/[^\s]+)/g;
-                const testoConLink = avv.testo.replace(urlRegex, (url) => {
-                    return `<br><a href="${url}" target="_blank" class="btn-link-blu">🔗 Apri Link</a>`;
-                });
-
                 card.innerHTML = `
-                    <div id="txt-${avv.id}" class="testo-avviso ${isManager ? 'testo-editabile' : ''}" contenteditable="${isManager}">${avv.testo}</div>
+                    <div id="txt-${avv.id}" class="testo-avviso ${isManager ? 'testo-editabile' : ''}" 
+                         contenteditable="${isManager}">${avv.testo}</div>
                     <div class="footer-avviso">
                         <small>${avv.data}</small>
+                        <button class="btn-comm" onclick="apriCommenti('${avv.id}', \`${avv.testo.replace(/'/g, "\\'")}\`)">💬 Risposte</button>
                         <div class="mgr-btns" style="${isManager ? 'display:flex' : 'none'}">
                             <button onclick="salvaModifica('${avv.id}')" style="background:#1f6feb; color:white">SALVA</button>
-                            <button onclick="eliminaAvviso('${avv.id}')" style="background:#e74c3c; color:white">🗑️</button>
+                            <button onclick="eliminaAvviso('${avv.id}')" style="background:var(--danger); color:white">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -106,49 +113,69 @@
         }
 
         window.login = function() {
-            if(prompt("Password Manager:") === PWD) {
+            if(prompt("Password:") === PWD) {
                 isManager = true;
                 document.querySelectorAll(".btn-admin, .btn-reset").forEach(b => b.style.display = "inline-block");
                 document.getElementById('btn-login').style.display = "none";
                 document.getElementById('area-spettacolo').contentEditable = true;
-                alert("Modalità Manager Attiva. Usa il tasto rosso per pulire tutto o crea nuovi avvisi.");
+                onValue(ref(db, 'teatro/bacheca_dati'), (s) => renderBacheca(s.val() || {}), {onlyOnce: true});
             }
         };
 
+        window.apriCommenti = function(id, testo) {
+            avvisoAttivoID = id;
+            document.getElementById('modal-avviso').style.display = "block";
+            document.getElementById('testo-focus').innerText = testo;
+            onValue(ref(db, 'commenti_v3/' + id), (snapshot) => {
+                const div = document.getElementById('lista-commenti');
+                div.innerHTML = "";
+                snapshot.forEach((child) => {
+                    const c = child.val();
+                    if(c.tipo === 'privato' && !isManager) return;
+                    div.innerHTML += `<div class="comm-item ${c.tipo==='privato'?'comm-privato':''}">
+                        ${isManager ? `<span style="float:right; cursor:pointer" onclick="eliminaComm('${id}','${child.key}')">❌</span>`:''}
+                        <b>${c.nome}</b>: ${c.testo} <br><small style="color:#8b949e">${c.ora || ''}</small>
+                    </div>`;
+                });
+            });
+        };
+
+        window.chiudiModale = function() { document.getElementById('modal-avviso').style.display = "none"; };
+
+        window.inviaMsg = function(tipo) {
+            const n = document.getElementById('nome-utente').value || "Anonimo";
+            const t = document.getElementById('testo-commento').value;
+            if(!t) return;
+            push(ref(db, 'commenti_v3/' + avvisoAttivoID), {
+                nome: n, testo: t, tipo: tipo, ora: new Date().toLocaleString()
+            });
+            document.getElementById('testo-commento').value = "";
+        };
+
+        window.eliminaComm = function(idA, idC) { remove(ref(db, `commenti_v3/${idA}/${idC}`)); };
         window.resetTotale = function() {
-            if(confirm("Vuoi Svuotare COMPLETAMENTE la bacheca? Questa azione non si può annullare.")) {
-                set(ref(db, 'teatro/bacheca_dati'), null).then(() => alert("Bacheca pulita!"));
+            if(confirm("Svuoto TUTTA la bacheca?")) {
+                set(ref(db, 'teatro/bacheca_dati'), null);
+                set(ref(db, 'commenti_v3'), null);
             }
         };
-
-        window.eliminaAvviso = function(id) {
-            if(confirm("Eliminare questo avviso?")) {
-                remove(ref(db, 'teatro/bacheca_dati/' + id));
-            }
-        };
-
+        window.eliminaAvviso = function(id) { if(confirm("Eliminare?")) remove(ref(db, 'teatro/bacheca_dati/' + id)); };
         window.salvaModifica = function(id) {
-            const nuovoTesto = document.getElementById('txt-'+id).innerText;
-            update(ref(db, 'teatro/bacheca_dati/' + id), { testo: nuovoTesto }).then(() => alert("Aggiornato!"));
+            const nt = document.getElementById('txt-'+id).innerText;
+            update(ref(db, 'teatro/bacheca_dati/' + id), { testo: nt }).then(() => alert("Salvato!"));
         };
-
         window.pubblicaNuovo = function() {
             const t = document.getElementById('testo-nuovo').value;
             if(!t) return;
-            push(ref(db, 'teatro/bacheca_dati'), { 
-                testo: t, 
-                data: new Date().toLocaleDateString(), 
-                timestamp: Date.now() 
-            });
+            push(ref(db, 'teatro/bacheca_dati'), { testo: t, data: new Date().toLocaleDateString(), timestamp: Date.now() });
             document.getElementById('testo-nuovo').value = "";
             document.getElementById('nuovo-avviso-box').style.display = 'none';
         };
-
         window.salvaTitolo = function() {
-            set(ref(db, 'teatro/spettacolo'), document.getElementById('area-spettacolo').innerHTML).then(() => alert("Titolo Spettacolo salvato!"));
+            set(ref(db, 'teatro/spettacolo'), document.getElementById('area-spettacolo').innerHTML).then(() => alert("Titolo salvato!"));
         };
-
         window.mostraBoxNuovo = function() { document.getElementById('nuovo-avviso-box').style.display = "block"; };
     </script>
 </body>
 </html>
+
