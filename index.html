@@ -6,72 +6,65 @@
     <title>Gestionale Oratorio San Luigi</title>
     <style>
         :root { --bg: #0b0e14; --card: #161b22; --border: #30363d; --accent: #ffc107; --pinned: #2c250d; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; overflow-x: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
         
-        .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        button { padding: 10px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.2s; }
+        .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; }
+        button { padding: 10px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
         .btn-admin { background: #238636; color: white; display: none; margin: 2px; }
         
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
         .theme-banner { background: #800000; padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
 
-        /* BACHECA CON SCROLLBAR */
-        .bacheca-container { 
-            background: var(--card); 
-            border-radius: 12px; 
-            border: 1px solid var(--border); 
-            max-height: 550px; 
-            overflow-y: auto; 
-            padding: 10px;
-        }
-        .bacheca-container::-webkit-scrollbar { width: 8px; }
-        .bacheca-container::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
+        /* NUOVO BOX INSERIMENTO */
+        #nuovo-avviso-box { display: none; background: var(--card); padding: 15px; border-radius: 10px; border: 2px solid var(--accent); margin-bottom: 20px; }
+        .input-admin { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid var(--border); background: #0d1117; color: white; box-sizing: border-box; }
 
-        .avviso-card { 
-            background: #0d1117; 
-            border-left: 5px solid var(--accent); 
-            padding: 15px; 
-            margin-bottom: 15px; 
-            border-radius: 6px; 
-            position: relative;
-        }
-        .avviso-card.pinned { background: var(--pinned); border-left: 5px solid #00ff00; border: 1px solid #ffc107; }
+        .bacheca-container { max-height: 600px; overflow-y: auto; background: var(--card); border-radius: 12px; padding: 10px; border: 1px solid var(--border); }
         
-        .testo-avviso { font-size: 1.05rem; line-height: 1.4; margin-bottom: 10px; cursor: pointer; }
-        .footer-avviso { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 8px; }
+        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 15px; margin-bottom: 15px; border-radius: 6px; position: relative; }
+        .avviso-card.pinned { background: var(--pinned); border: 1px solid var(--accent); }
         
-        .btn-commenti { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 5px 10px; font-size: 0.8rem; }
-        .btn-link-blu { background: #1f6feb; color: white !important; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
-        .btn-del-avv { background: #e74c3c; color: white; font-size: 0.7rem; display: none; }
-        .btn-pin-avv { background: #f39c12; color: white; font-size: 0.7rem; display: none; }
+        .testo-avviso { font-size: 1.1rem; line-height: 1.4; margin-bottom: 10px; }
+        .testo-avviso[contenteditable="true"] { background: #1c2128; padding: 5px; border: 1px dashed var(--accent); }
 
-        /* MODALE COMMENTI */
-        #modal-avviso { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; padding-top: 20px; }
-        .modal-content { max-width: 600px; margin: auto; background: var(--card); padding: 25px; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
-        .input-grande { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: #0d1117; color: white; font-size: 1.1rem; box-sizing: border-box; }
+        .footer-avviso { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 10px; }
         
-        .commento-item { background: #0d1117; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid var(--border); position: relative; }
-        .del-btn { color: #e74c3c; cursor: pointer; float: right; font-size: 0.7rem; font-weight: bold; }
+        .btn-commenti { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 6px 12px; }
+        .btn-link-blu { background: #1f6feb; color: white !important; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; }
+        
+        /* Tasti Manager */
+        .mgr-btns { display: none; gap: 5px; }
+        .btn-del { background: #e74c3c; color: white; padding: 5px 8px; font-size: 0.8rem; }
+        .btn-pin { background: #f39c12; color: white; padding: 5px 8px; font-size: 0.8rem; }
+        .btn-save-edit { background: #1f6feb; color: white; padding: 5px 8px; font-size: 0.8rem; }
 
+        /* MODALE */
+        #modal-avviso { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; }
+        .modal-content { max-width: 600px; margin: 30px auto; background: var(--card); padding: 20px; border-radius: 12px; position: relative; max-height: 85vh; overflow-y: auto; }
+        
         footer { text-align: center; color: #8b949e; font-size: 0.8rem; margin: 30px 0; }
     </style>
 </head>
 <body>
 
     <div class="admin-panel">
-        🔐 <b>Area Manager</b> 
+        🔐 <b>Manager Oratorio</b> 
         <button id="btn-login" onclick="login()">Accedi</button>
-        <button class="btn-admin" onclick="nuovoAvviso()">+ Aggiungi Avviso</button>
-        <button class="btn-admin" onclick="salvaTitoloSpettacolo()" style="background:#1f6feb">💾 Salva Titolo</button>
+        <button class="btn-admin" onclick="mostraBoxNuovo()">+ Nuovo Avviso</button>
+        <button class="btn-admin" onclick="salvaTitolo()" style="background:#1f6feb">💾 Salva Titolo Spettacolo</button>
     </div>
 
     <div class="container">
         <div class="theme-banner" id="area-spettacolo"><h2>Caricamento...</h2></div>
+
+        <div id="nuovo-avviso-box">
+            <h4>Nuovo Messaggio</h4>
+            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi qui il testo e incolla eventuali link..."></textarea>
+            <button onclick="pubblicaNuovo()" style="background:#238636; color:white; width:100%;">PUBBLICA ORA</button>
+            <button onclick="document.getElementById('nuovo-avviso-box').style.display='none'" style="background:transparent; color:white; width:100%; margin-top:5px;">Annulla</button>
+        </div>
         
-        <h3 style="display:flex; justify-content:space-between; align-items:center;">
-            Bacheca Avvisi
-            <span style="font-size:0.7rem; color:var(--accent);">Tocca il testo per commentare</span>
-        </h3>
+        <h3>Bacheca Comunicazioni</h3>
         <div class="bacheca-container" id="area-bacheca"></div>
 
         <footer>&copy; 2026 Oratorio San Luigi | creato da Manuel Manera</footer>
@@ -80,17 +73,15 @@
     <div id="modal-avviso">
         <div class="modal-content">
             <button onclick="chiudiModale()" style="float:right; background:#e74c3c; color:white;">CHIUDI X</button>
-            <div id="testo-focus" style="margin-top:40px; font-size: 1.2rem; border-bottom: 1px solid #30363d; padding-bottom: 15px; color: #ffc107;"></div>
-            
+            <div id="testo-focus" style="margin-top:40px; font-size: 1.2rem; border-bottom: 1px solid #30363d; padding-bottom: 15px;"></div>
             <div style="margin-top:20px;">
-                <input type="text" id="nome-utente" class="input-grande" placeholder="Il Tuo Nome">
-                <textarea id="testo-commento" class="input-grande" style="height:70px;" placeholder="Scrivi qui..."></textarea>
+                <input type="text" id="nome-utente" class="input-admin" placeholder="Il Tuo Nome">
+                <textarea id="testo-commento" class="input-admin" placeholder="Scrivi un commento..."></textarea>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="inviaMsg('pubblico')" style="background:#238636; color:white; flex:1;">Commento Pubblico</button>
-                    <button onclick="inviaMsg('privato')" style="background:#800000; color:white; flex:1;">Privato a Manager 🔒</button>
+                    <button onclick="inviaMsg('pubblico')" style="background:#238636; color:white; flex:1;">Pubblico</button>
+                    <button onclick="inviaMsg('privato')" style="background:#800000; color:white; flex:1;">Privato 🔒</button>
                 </div>
             </div>
-
             <div id="lista-commenti" style="margin-top:20px;"></div>
         </div>
     </div>
@@ -113,7 +104,7 @@
         let isManager = false;
         let avvisoAttivoID = "";
 
-        // 1. CARICAMENTO DATI
+        // Caricamento Dati
         onValue(ref(db, 'teatro/'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -125,92 +116,67 @@
         function renderBacheca(dati) {
             const container = document.getElementById('area-bacheca');
             container.innerHTML = "";
-            
-            // Trasformiamo l'oggetto in array e ordiniamo: prima i "pinned", poi per data
             let lista = Object.keys(dati).map(key => ({ id: key, ...dati[key] }));
             lista.sort((a, b) => (b.pinned || 0) - (a.pinned || 0) || b.timestamp - a.timestamp);
 
             lista.forEach((avv) => {
                 const card = document.createElement('div');
                 card.className = `avviso-card ${avv.pinned ? 'pinned' : ''}`;
-                
-                const regex = /(https?:\/\/[^\s<>]+)/g;
-                const link = avv.testo.match(regex);
-                let btnLink = link ? `<a href="${link[0]}" target="_blank" class="btn-link-blu">🔗 Link</a>` : "";
+                const linkMatch = avv.testo.match(/(https?:\/\/[^\s<>]+)/g);
+                let btnLink = linkMatch ? `<a href="${linkMatch[0]}" target="_blank" class="btn-link-blu">🔗 Link</a>` : "";
 
                 card.innerHTML = `
-                    ${avv.pinned ? '<span style="color:#ffc107; font-size:0.7rem;">📌 IN PRIMO PIANO</span>' : ''}
-                    <div class="testo-avviso" onclick="apriCommenti('${avv.id}', \`${avv.testo.replace(/'/g, "\\'")}\`)">${avv.testo}</div>
+                    ${avv.pinned ? '<small style="color:var(--accent);">📌 FISSATO IN ALTO</small>' : ''}
+                    <div id="txt-${avv.id}" class="testo-avviso" 
+                         contenteditable="${isManager}" 
+                         onclick="${!isManager ? `apriCommenti('${avv.id}', \`${avv.testo.replace(/`/g, "")}\`)` : ''}">${avv.testo}</div>
+                    
                     <div class="footer-avviso">
                         <small style="color:#8b949e">${avv.data}</small>
                         ${btnLink}
-                        <button class="btn-commenti" onclick="apriCommenti('${avv.id}', \`${avv.testo.replace(/'/g, "\\'")}\`)">💬 Commenta</button>
-                        <button class="btn-pin-avv" onclick="pinAvviso('${avv.id}', ${!avv.pinned})" style="${isManager ? 'display:inline' : 'none'}">${avv.pinned ? 'Togli' : 'Fissa'}</button>
-                        <button class="btn-del-avv" onclick="eliminaAvviso('${avv.id}')" style="${isManager ? 'display:inline' : 'none'}">ELIMINA 🗑️</button>
+                        <button class="btn-commenti" onclick="apriCommenti('${avv.id}', \`${avv.testo.replace(/`/g, "")}\`)">💬 Risposte</button>
+                        
+                        <div class="mgr-btns" style="${isManager ? 'display:flex' : 'none'}">
+                            <button class="btn-save-edit" onclick="salvaModifica('${avv.id}')">💾 Salva</button>
+                            <button class="btn-pin" onclick="pinAvviso('${avv.id}', ${!avv.pinned})">${avv.pinned ? 'Sblocca' : '📌 Fissa'}</button>
+                            <button class="btn-del" onclick="eliminaAvviso('${avv.id}')">🗑️</button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        // 2. COMMENTI
-        window.apriCommenti = function(id, testo) {
-            avvisoAttivoID = id;
-            document.getElementById('modal-avviso').style.display = "block";
-            document.getElementById('testo-focus').innerText = testo;
-            caricaCommenti(id);
-        };
-
-        window.chiudiModale = function() { document.getElementById('modal-avviso').style.display = "none"; };
-
-        function caricaCommenti(id) {
-            onValue(ref(db, 'commenti_v3/' + id), (snapshot) => {
-                const div = document.getElementById('lista-commenti');
-                div.innerHTML = "<h4>Risposte:</h4>";
-                snapshot.forEach((child) => {
-                    const c = child.val();
-                    if(c.tipo === 'privato' && !isManager) return;
-                    div.innerHTML += `
-                        <div class="commento-item" style="${c.tipo === 'privato' ? 'border-color:#e74c3c; background:#1c1112' : ''}">
-                            ${isManager ? `<span class="del-btn" onclick="eliminaComm('${id}','${child.key}')">X</span>` : ''}
-                            <b>${c.nome}</b> ${c.tipo === 'privato' ? '🔒 (Privato a Manager)' : ''}<br>
-                            ${c.testo} <br><small style="color:#484f58; font-size:0.7rem;">${c.ora}</small>
-                        </div>`;
-                });
-            });
-        }
-
-        window.inviaMsg = function(tipo) {
-            const nome = document.getElementById('nome-utente').value || "Anonimo";
-            const testo = document.getElementById('testo-commento').value;
-            if(!testo) return;
-            push(ref(db, 'commenti_v3/' + avvisoAttivoID), {
-                nome: nome, testo: testo, tipo: tipo, ora: new Date().toLocaleString()
-            });
-            document.getElementById('testo-commento').value = "";
-            if(tipo === 'privato') alert("Inviato al Manager!");
-        };
-
-        // 3. FUNZIONI MANAGER
+        // Funzioni Manager
         window.login = function() {
             if(prompt("Password Manager:") === PWD) {
                 isManager = true;
-                document.querySelectorAll(".btn-admin, .btn-del-avv, .btn-pin-avv").forEach(b => b.style.display = "inline-block");
+                document.querySelectorAll(".btn-admin, .mgr-btns").forEach(b => b.style.display = "inline-block");
                 document.getElementById('btn-login').style.display = "none";
                 document.getElementById('area-spettacolo').contentEditable = true;
+                alert("Modalità Manager Attiva! Ora puoi modificare i testi direttamente sulla bacheca.");
             }
         };
 
-        window.nuovoAvviso = function() {
-            const t = prompt("Testo dell'avviso:");
-            if(t) {
-                const newRef = push(ref(db, 'teatro/bacheca_dati'));
-                set(newRef, { testo: t, data: new Date().toLocaleDateString(), timestamp: Date.now(), pinned: false });
-            }
+        window.mostraBoxNuovo = function() { document.getElementById('nuovo-avviso-box').style.display = "block"; };
+
+        window.pubblicaNuovo = function() {
+            const t = document.getElementById('testo-nuovo').value;
+            if(!t) return;
+            const newRef = push(ref(db, 'teatro/bacheca_dati'));
+            set(newRef, { testo: t, data: new Date().toLocaleDateString(), timestamp: Date.now(), pinned: false });
+            document.getElementById('testo-nuovo').value = "";
+            document.getElementById('nuovo-avviso-box').style.display = 'none';
+        };
+
+        window.salvaModifica = function(id) {
+            const nuovoTesto = document.getElementById('txt-'+id).innerText;
+            update(ref(db, 'teatro/bacheca_dati/' + id), { testo: nuovoTesto });
+            alert("Modifica salvata!");
         };
 
         window.eliminaAvviso = function(id) {
-            if(confirm("Eliminare questo avviso e tutti i suoi commenti?")) {
+            if(confirm("Eliminare definitivamente?")) {
                 remove(ref(db, 'teatro/bacheca_dati/' + id));
                 remove(ref(db, 'commenti_v3/' + id));
             }
@@ -220,14 +186,40 @@
             update(ref(db, 'teatro/bacheca_dati/' + id), { pinned: status });
         };
 
-        window.eliminaComm = function(idA, idC) {
-            if(confirm("Eliminare commento?")) remove(ref(db, `commenti_v3/${idA}/${idC}`));
+        window.salvaTitolo = function() {
+            set(ref(db, 'teatro/spettacolo'), document.getElementById('area-spettacolo').innerHTML)
+            .then(() => alert("Titolo Spettacolo salvato!"));
         };
 
-        window.salvaTitoloSpettacolo = function() {
-            set(ref(db, 'teatro/spettacolo'), document.getElementById('area-spettacolo').innerHTML)
-            .then(() => alert("Titolo salvato!"));
+        // Commenti e Modale
+        window.apriCommenti = function(id, testo) {
+            avvisoAttivoID = id;
+            document.getElementById('modal-avviso').style.display = "block";
+            document.getElementById('testo-focus').innerText = testo;
+            onValue(ref(db, 'commenti_v3/' + id), (snapshot) => {
+                const div = document.getElementById('lista-commenti');
+                div.innerHTML = "<h4>Chat:</h4>";
+                snapshot.forEach((child) => {
+                    const c = child.val();
+                    if(c.tipo === 'privato' && !isManager) return;
+                    div.innerHTML += `<div style="background:#0d1117; padding:8px; margin-bottom:5px; border-radius:5px; border-left:3px solid ${c.tipo==='privato'?'#e74c3c':'#58a6ff'}">
+                        ${isManager ? `<span style="color:#e74c3c; cursor:pointer; float:right" onclick="eliminaComm('${id}','${child.key}')">X</span>`:''}
+                        <b>${c.nome}</b>: ${c.testo}</div>`;
+                });
+            });
         };
+
+        window.chiudiModale = function() { document.getElementById('modal-avviso').style.display = "none"; };
+        
+        window.inviaMsg = function(tipo) {
+            const n = document.getElementById('nome-utente').value || "Anonimo";
+            const t = document.getElementById('testo-commento').value;
+            if(!t) return;
+            push(ref(db, 'commenti_v3/' + avvisoAttivoID), { nome: n, testo: t, tipo: tipo, ora: new Date().toLocaleString() });
+            document.getElementById('testo-commento').value = "";
+        };
+
+        window.eliminaComm = function(idA, idC) { remove(ref(db, `commenti_v3/${idA}/${idC}`)); };
     </script>
 </body>
 </html>
