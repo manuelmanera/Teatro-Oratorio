@@ -5,81 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionale Oratorio San Luigi</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #0b0e14; color: white; padding-bottom: 50px; }
-        header { background: #161b22; color: white; text-align: center; padding: 1.5rem; border-bottom: 1px solid #30363d; }
-        .admin-panel { background: #ffc107; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 100; color: black; }
-        button { padding: 8px 12px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; margin: 5px; }
-        .btn-admin { background: #238636; color: white; display: none; }
+        :root { --bg: #0b0e14; --card: #161b22; --border: #30363d; --text: #c9d1d9; --accent: #ffc107; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
+        header { background: var(--card); text-align: center; padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        
+        .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; }
+        button { padding: 10px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.2s; }
+        .btn-admin { background: #238636; color: white; display: none; margin: 5px; }
         
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
-        .theme-banner { background: #800000; color: white; padding: 25px; text-align: center; border-radius: 12px; margin-bottom: 25px; border: 1px solid #30363d; }
+        .theme-banner { background: #800000; padding: 25px; text-align: center; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
         
-        .card { background: #161b22; padding: 20px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 20px; }
-        #area-bacheca { max-height: 400px; overflow-y: auto; padding-right: 10px; }
+        /* BACHECA */
+        .avviso { background: var(--card); border-left: 5px solid var(--accent); padding: 20px; margin: 15px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; position: relative; }
+        .avviso:hover { transform: translateY(-3px); background: #1c2128; }
+        .hint-click { display: block; font-size: 0.7rem; color: var(--accent); margin-top: 10px; text-transform: uppercase; }
 
-        .avviso { background: #0d1117; border-left: 5px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 6px; color: #c9d1d9; }
-        .btn-link { display: inline-block; margin-top: 10px; background: #1f6feb; color: white !important; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 0.8rem; }
+        /* MODALE (SCHERMATA AVVISO) */
+        #modal-avviso { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
+        .modal-content { max-width: 600px; margin: 40px auto; background: var(--card); padding: 30px; border-radius: 15px; position: relative; border: 1px solid var(--border); }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 2rem; cursor: pointer; color: #8b949e; }
         
-        /* Sezioni Messaggi */
-        .sezione-messaggi { background: #161b22; border-radius: 8px; padding: 10px; border: 1px solid #30363d; }
-        .lista-msg { max-height: 200px; overflow-y: auto; margin-bottom: 10px; font-size: 0.85rem; }
-        .msg-item { border-bottom: 1px solid #21262d; padding: 8px 0; }
-        .msg-privato { border-left: 3px solid #e74c3c; padding-left: 10px; margin-bottom: 10px; background: #1c1112; }
-        
-        .input-box { display: flex; gap: 5px; margin-top: 10px; }
-        .input-box input { flex-grow: 1; padding: 8px; border-radius: 4px; border: 1px solid #30363d; background: #0d1117; color: white; }
-        
-        #pannello-privato { display: none; border: 2px solid #e74c3c; }
-        .editable-active { border: 2px dashed #ffc107 !important; background: #1c2128 !important; }
-        footer { text-align: center; color: #8b949e; font-size: 0.8rem; margin-top: 30px; }
+        /* COMMENTI */
+        .comment-box { margin-top: 25px; border-top: 1px solid var(--border); padding-top: 20px; }
+        .input-grande { width: 100%; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--border); background: #0d1117; color: white; font-size: 1.1rem; box-sizing: border-box; }
+        .lista-commenti { margin-top: 20px; }
+        .commento-item { background: #0d1117; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); position: relative; }
+        .commento-item b { color: #58a6ff; font-size: 1rem; }
+        .del-btn { color: #e74c3c; cursor: pointer; font-weight: bold; margin-left: 10px; display: none; }
+
+        .btn-link { display: inline-block; margin-top: 10px; background: #1f6feb; color: white !important; text-decoration: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; }
+        .editable-active { border: 2px dashed var(--accent) !important; padding: 10px; }
+        footer { text-align: center; color: #8b949e; font-size: 0.8rem; margin: 40px 0; }
     </style>
 </head>
 <body>
 
     <div class="admin-panel">
-        🔐 Area Riservata: 
-        <button id="btn-modifica" onclick="verificaPassword()">Accedi Manager</button>
-        <button class="btn-admin" onclick="aggiungiNuovoAvviso()">+ Nuovo Avviso</button>
-        <button class="btn-admin" onclick="pubblicaModifiche()">💾 Salva Modifiche</button>
-        <button class="btn-admin" onclick="svuotaPrivati()" style="background:#e74c3c">🗑️ Svuota Posta</button>
+        🔐 Manager: 
+        <button id="btn-login" onclick="login()">Accedi</button>
+        <button class="btn-admin" onclick="aggiungiNuovo()">+ Avviso</button>
+        <button class="btn-admin" onclick="salvaTutto()">💾 Salva</button>
+        <span id="label-privati" class="btn-admin" style="background:#e74c3c; padding: 5px 10px; border-radius: 5px;">Posta Privata Attiva</span>
     </div>
 
     <header>
-        <h1>Gruppo Oratorio San Luigi</h1>
-        <p>Comunicazioni ufficiali</p>
+        <h1>Oratorio San Luigi</h1>
+        <p>Comunicazioni Gruppo Teatro</p>
     </header>
 
     <div class="container">
-        <div class="card" id="pannello-privato">
-            <h3 style="color: #e74c3c;">📩 Posta in Arrivo (Privata)</h3>
-            <div id="lista-privati" class="lista-msg">Nessun messaggio privato.</div>
-        </div>
+        <div class="theme-banner" id="area-spettacolo"><h2>Caricamento...</h2></div>
+        <h3 style="display:flex; justify-content: space-between;">Bacheca Avvisi <small style="font-weight:normal; font-size: 0.8rem; color:#8b949e;">Tocca per commentare</small></h3>
+        <div id="area-bacheca"></div>
+        <footer>&copy; 2026 Oratorio San Luigi | creato da Manuel Manera</footer>
+    </div>
 
-        <div class="theme-banner" id="area-spettacolo">
-            <h2>Caricamento dati...</h2>
-        </div>
-
-        <div class="card">
-            <h3>Bacheca Avvisi</h3>
-            <div id="area-bacheca"></div>
+    <div id="modal-avviso">
+        <div class="modal-content">
+            <span class="close-btn" onclick="chiudiModale()">&times;</span>
+            <div id="testo-avviso-focus" style="font-size: 1.2rem; line-height: 1.6; color: white;"></div>
             
-            <hr style="border: 0; border-top: 1px solid #30363d; margin: 20px 0;">
-            
-            <h3>Chat Pubblica / Commenti</h3>
-            <div class="sezione-messaggi">
-                <div id="lista-pubblici" class="lista-msg"></div>
-                <div class="input-box">
-                    <input type="text" id="nome-user" placeholder="Tuo Nome" style="width: 30%;">
-                    <input type="text" id="testo-pubblico" placeholder="Scrivi a tutti...">
-                    <button onclick="inviaMessaggio('pubblico')" style="background: #238636; color: white;">Invia</button>
+            <div class="comment-box">
+                <h4>Commenti e Risposte</h4>
+                <input type="text" id="nome-utente" class="input-grande" placeholder="Il Tuo Nome">
+                <textarea id="testo-commento" class="input-grande" style="height: 80px;" placeholder="Scrivi un commento..."></textarea>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="inviaMsg('pubblico')" style="background:#238636; color:white; flex:1;">Commento Pubblico</button>
+                    <button onclick="inviaMsg('privato')" style="background:#800000; color:white; flex:1;">Messaggio Privato 🔒</button>
                 </div>
-                <div class="input-box">
-                    <input type="text" id="testo-privato" placeholder="Invia messaggio privato al manager...">
-                    <button onclick="inviaMessaggio('privato')" style="background: #e74c3c; color: white;">Invia Privato 🔒</button>
-                </div>
+                <div id="elenco-commenti" class="lista-commenti"></div>
             </div>
         </div>
-        <footer>&copy; 2026 Oratorio San Luigi | creato da Manuel Manera</footer>
     </div>
 
     <script type="module">
@@ -91,100 +88,115 @@
             authDomain: "teatro-oratorio.firebaseapp.com",
             databaseURL: "https://teatro-oratorio-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "teatro-oratorio",
-            storageBucket: "teatro-oratorio.firebasestorage.app",
-            messagingSenderId: "180423891976",
-            appId: "1:180423891976:web:c241a695014dbc3f8d85bd"
+            storageBucket: "teatro-oratorio.firebasestorage.app"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const CHIAVE_ACCESSO = "PeppinoBomber";
+        const CHIAVE = "PeppinoBomber";
+        let isManager = false;
+        let idAvvisoCorrente = "";
 
-        // 1. CARICAMENTO AVVISI
+        // 1. CARICAMENTO DATI
         onValue(ref(db, 'teatro/'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 document.getElementById('area-spettacolo').innerHTML = data.spettacolo;
-                document.getElementById('area-bacheca').innerHTML = trasformaLink(data.bacheca);
+                renderBacheca(data.bacheca);
             }
         });
 
-        function trasformaLink(testo) {
-            const regexLink = /(https?:\/\/[^\s<>]+)/g;
-            return testo.replace(regexLink, (url) => `<br><a href="${url}" target="_blank" class="btn-link">🔗 Visualizza Allegato</a>`);
+        function renderBacheca(html) {
+            const div = document.getElementById('area-bacheca');
+            div.innerHTML = html;
+            // Trasformiamo i div in elementi cliccabili
+            const avvisi = div.querySelectorAll('.avviso');
+            avvisi.forEach((el, index) => {
+                const id = "avviso_" + index;
+                el.setAttribute('onclick', `apriAvviso('${id}', this.innerHTML)`);
+                el.innerHTML += `<span class="hint-click">💬 Clicca per leggere o commentare</span>`;
+            });
         }
 
-        // 2. CHAT PUBBLICA
-        onValue(ref(db, 'chat_pubblica/'), (snapshot) => {
-            const div = document.getElementById('lista-pubblici');
-            div.innerHTML = "";
-            snapshot.forEach((c) => {
-                const m = c.val();
-                div.innerHTML += `<div class="msg-item"><b>${m.nome}:</b> ${m.testo} <small style="color:#484f58;">${m.ora}</small></div>`;
-            });
-            div.scrollTop = div.scrollHeight;
-        });
+        // 2. MODALE E COMMENTI
+        window.apriAvviso = function(id, contenuto) {
+            idAvvisoCorrente = id;
+            document.getElementById('modal-avviso').style.display = "block";
+            // Puliamo il contenuto dal testo "clicca qui"
+            let pulito = contenuto.replace('<span class="hint-click">💬 Clicca per leggere o commentare</span>', '');
+            document.getElementById('testo-avviso-focus').innerHTML = trasformaLink(pulito);
+            caricaCommenti(id);
+        };
 
-        // 3. MESSAGGI PRIVATI (Solo caricati se manager accede)
-        function caricaPrivati() {
-            onValue(ref(db, 'chat_privata/'), (snapshot) => {
-                const div = document.getElementById('lista-privati');
+        window.chiudiModale = function() { document.getElementById('modal-avviso').style.display = "none"; };
+
+        function trasformaLink(t) {
+            return t.replace(/(https?:\/\/[^\s<>]+)/g, '<br><a href="$1" target="_blank" class="btn-link">🔗 Apri Link</a>');
+        }
+
+        function caricaCommenti(id) {
+            onValue(ref(db, 'commenti/' + id), (snapshot) => {
+                const div = document.getElementById('elenco-commenti');
                 div.innerHTML = "";
-                snapshot.forEach((c) => {
-                    const m = c.val();
-                    div.innerHTML += `<div class="msg-item msg-privato"><b>DA: ${m.nome}</b><br>${m.testo} <br><small>${m.ora}</small></div>`;
+                snapshot.forEach((child) => {
+                    const c = child.val();
+                    const isPrivato = c.tipo === 'privato';
+                    
+                    // Se è privato, lo mostriamo SOLO se l'utente è Manager
+                    if (isPrivato && !isManager) return;
+
+                    div.innerHTML += `
+                        <div class="commento-item" style="${isPrivato ? 'border-color:#e74c3c; background:#1c1112' : ''}">
+                            <b>${c.nome}</b> ${isPrivato ? '<small>(Privato 🔒)</small>' : ''}
+                            <p style="margin:5px 0;">${c.testo}</p>
+                            <small style="color:#484f58">${c.data}</small>
+                            <span class="del-btn" onclick="eliminaCommento('${id}', '${child.key}')" style="${isManager ? 'display:inline' : 'none'}"> [ELIMINA]</span>
+                        </div>`;
                 });
             });
         }
 
-        window.inviaMessaggio = function(tipo) {
-            const nome = document.getElementById('nome-user').value || "Anonimo";
-            const idInput = tipo === 'pubblico' ? 'testo-pubblico' : 'testo-privato';
-            const testo = document.getElementById(idInput).value;
-            
+        window.inviaMsg = function(tipo) {
+            const nome = document.getElementById('nome-utente').value || "Anonimo";
+            const testo = document.getElementById('testo-commento').value;
             if(!testo) return;
 
-            const percorso = tipo === 'pubblico' ? 'chat_pubblica/' : 'chat_privata/';
-            push(ref(db, percorso), {
-                nome: nome,
-                testo: testo,
-                ora: new Date().toLocaleString()
+            push(ref(db, 'commenti/' + idAvvisoCorrente), {
+                nome: nome, testo: testo, tipo: tipo, data: new Date().toLocaleString()
             });
-
-            document.getElementById(idInput).value = "";
-            alert(tipo === 'privato' ? "Messaggio privato inviato con successo!" : "Messaggio inviato.");
+            document.getElementById('testo-commento').value = "";
+            if(tipo === 'privato') alert("Messaggio privato inviato!");
         };
 
-        // 4. AMMINISTRAZIONE
-        window.verificaPassword = function() {
-            if (prompt("Codice Manager:") === CHIAVE_ACCESSO) {
+        // 3. MANAGER
+        window.login = function() {
+            if (prompt("Codice Segreto:") === CHIAVE) {
+                isManager = true;
                 document.querySelectorAll(".btn-admin").forEach(b => b.style.display = "inline-block");
-                document.getElementById('btn-modifica').style.display = "none";
-                document.getElementById('pannello-privato').style.display = "block";
+                document.getElementById('btn-login').style.display = "none";
                 document.getElementById('area-spettacolo').contentEditable = true;
                 document.getElementById('area-bacheca').contentEditable = true;
                 document.getElementById('area-bacheca').classList.add("editable-active");
-                document.querySelectorAll('.btn-link').forEach(b => b.remove());
-                caricaPrivati();
-            } else { alert("Accesso negato."); }
-        };
-
-        window.svuotaPrivati = function() {
-            if(confirm("Vuoi cancellare tutti i messaggi privati letti?")) {
-                remove(ref(db, 'chat_privata/'));
+                // Pulizia per modifica
+                document.querySelectorAll('.hint-click').forEach(s => s.remove());
             }
         };
 
-        window.aggiungiNuovoAvviso = function() {
-            const b = document.getElementById('area-bacheca');
-            b.innerHTML = `<div class="avviso"><strong>${new Date().toLocaleDateString()}:</strong> Scrivi qui...</div>` + b.innerHTML;
+        window.eliminaCommento = function(idAvv, idComm) {
+            if(confirm("Eliminare definitivamente questo commento?")) {
+                remove(ref(db, `commenti/${idAvv}/${idComm}`));
+            }
         };
 
-        window.pubblicaModifiche = function() {
-            const temp = document.createElement('div');
-            temp.innerHTML = document.getElementById('area-bacheca').innerHTML;
-            temp.querySelectorAll('.btn-link').forEach(l => l.remove());
-            set(ref(db, 'teatro/'), { spettacolo: document.getElementById('area-spettacolo').innerHTML, bacheca: temp.innerHTML }).then(() => location.reload());
+        window.aggiungiNuovo = function() {
+            const b = document.getElementById('area-bacheca');
+            b.innerHTML = `<div class="avviso"><strong>${new Date().toLocaleDateString()}:</strong> Nuovo avviso...</div>` + b.innerHTML;
+        };
+
+        window.salvaTutto = function() {
+            const spet = document.getElementById('area-spettacolo').innerHTML;
+            const bachecaHTML = document.getElementById('area-bacheca').innerHTML;
+            set(ref(db, 'teatro/'), { spettacolo: spet, bacheca: bachecaHTML }).then(() => location.reload());
         };
     </script>
 </body>
