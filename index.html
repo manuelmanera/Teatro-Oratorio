@@ -41,8 +41,8 @@
         <div class="theme-banner" id="area-spettacolo"><h2>Caricamento...</h2></div>
         
         <div id="nuovo-avviso-box">
-            <h4>Scrivi Nuovo Avviso</h4>
-            <textarea id="testo-nuovo" class="input-admin" rows="3"></textarea>
+            <h4>Crea Nuovo Avviso</h4>
+            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi qui..."></textarea>
             <button onclick="pubblicaNuovo()" style="background:#238636; color:white; width:100%;">PUBBLICA</button>
         </div>
 
@@ -82,27 +82,29 @@
             const container = document.getElementById('area-bacheca');
             container.innerHTML = ""; 
             
-            let lista = Object.keys(dati).map(key => ({ id: key, ...dati[key] }));
-            lista.sort((a, b) => (b.pinned || 0) - (a.pinned || 0) || b.timestamp - a.timestamp);
+            // Creiamo un array da un oggetto e lo ordiniamo per data
+            let listaAvvisiRaw = Object.keys(dati).map(key => ({ id: key, ...dati[key] }));
+            listaAvvisiRaw.sort((a, b) => (b.pinned || 0) - (a.pinned || 0) || b.timestamp - a.timestamp);
 
-            if (lista.length === 0) {
+            if (listaAvvisiRaw.length === 0) {
                 container.innerHTML = "<p style='text-align:center; color:#8b949e;'>Nessun avviso presente.</p>";
                 return;
             }
 
-            lista.forEach((avv) => {
+            listaAvvisiRaw.forEach((avv, index) => {
                 const card = document.createElement('div');
                 card.className = `avviso-card ${avv.pinned ? 'pinned' : ''}`;
                 
                 card.innerHTML = `
                     <div id="txt-${avv.id}" class="testo-avviso ${isManager ? 'testo-editabile' : ''}" 
-                         contenteditable="${isManager}">${avv.testo}</div>
+                         contenteditable="${isManager}" 
+                         onclick="${!isManager ? `apriCommenti('${avv.id}', \`${avv.testo.replace(/'/g, "\\'")}\`)` : ''}">${avv.testo}</div>
                     
                     <div class="footer-avviso">
                         <small>${avv.data}</small>
                         <div class="mgr-btns" style="${isManager ? 'display:flex' : 'none'}">
-                            <button class="btn-save-edit" onclick="salvaModifica('${avv.id}')">SALVA ✅</button>
-                            <button class="btn-pin" onclick="pinAvviso('${avv.id}', ${!avv.pinned})">${avv.pinned ? 'Sblocca' : '📌 Fissa'}</button>
+                            <button class="btn-save-edit" onclick="salvaModifica('${avv.id}')">SALVA</button>
+                            <button class="btn-pin" onclick="pinAvviso('${avv.id}', ${!avv.pinned})">${avv.pinned ? '📌 Fix' : 'Fix'}</button>
                             <button class="btn-del" onclick="eliminaAvviso('${avv.id}')">🗑️ ELIMINA</button>
                         </div>
                     </div>
@@ -117,20 +119,19 @@
                 document.querySelectorAll(".btn-admin").forEach(b => b.style.display = "inline-block");
                 document.getElementById('btn-login').style.display = "none";
                 document.getElementById('area-spettacolo').contentEditable = true;
-                // Forza il ricaricamento della bacheca con i tasti manager
-                onValue(ref(db, 'teatro/bacheca_dati'), (s) => renderBacheca(s.val() || {}), {onlyOnce: true});
+                // Rieseguiamo il render per mostrare i tasti manager
+                onValue(ref(db, 'teatro/'), (s) => renderBacheca(s.val()?.bacheca_dati || {}), {onlyOnce: true});
             }
         };
 
         window.eliminaAvviso = function(id) {
-            if(confirm("Sei sicuro? L'avviso sparirà per tutti.")) {
-                // Rimuoviamo l'avviso e puliamo manualmente l'interfaccia
+            if(confirm("L'avviso sparirà per tutti. Vuoi procedere?")) {
                 remove(ref(db, 'teatro/bacheca_dati/' + id))
                 .then(() => {
                     remove(ref(db, 'commenti_v3/' + id));
                     console.log("Eliminato ID: " + id);
                 })
-                .catch((error) => alert("Errore: " + error));
+                .catch((error) => alert("Errore durante l'eliminazione: " + error.message));
             }
         };
 
@@ -140,17 +141,17 @@
             .then(() => alert("Modifica salvata!"));
         };
 
+        window.mostraBoxNuovo = function() { document.getElementById('nuovo-avviso-box').style.display = "block"; };
+
         window.pubblicaNuovo = function() {
             const t = document.getElementById('testo-nuovo').value;
             if(!t) return;
-            push(ref(db, 'teatro/bacheca_dati'), { 
-                testo: t, 
-                data: new Date().toLocaleDateString(), 
-                timestamp: Date.now(), 
-                pinned: false 
+            const bachecaRef = ref(db, 'teatro/bacheca_dati');
+            push(bachecaRef, { testo: t, data: new Date().toLocaleDateString(), timestamp: Date.now(), pinned: false })
+            .then(() => {
+                document.getElementById('testo-nuovo').value = "";
+                document.getElementById('nuovo-avviso-box').style.display = 'none';
             });
-            document.getElementById('testo-nuovo').value = "";
-            document.getElementById('nuovo-avviso-box').style.display = 'none';
         };
 
         window.pinAvviso = function(id, status) {
@@ -161,10 +162,9 @@
             set(ref(db, 'teatro/spettacolo'), document.getElementById('area-spettacolo').innerHTML)
             .then(() => alert("Titolo salvato!"));
         };
-
-        window.mostraBoxNuovo = function() {
-            document.getElementById('nuovo-avviso-box').style.display = 'block';
-        };
+        
+        window.chiudiModale = function() { document.getElementById('modal-avviso').style.display = "none"; };
     </script>
 </body>
 </html>
+
