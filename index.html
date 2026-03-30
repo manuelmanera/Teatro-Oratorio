@@ -5,31 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionale Oratorio San Luigi</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #0b0e14; color: white; padding-bottom: 50px; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #0b0e14; color: white; padding-bottom: 50px; }
         header { background: #161b22; color: white; text-align: center; padding: 1.5rem; border-bottom: 1px solid #30363d; }
         .admin-panel { background: #ffc107; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 100; color: black; }
-        button { padding: 10px 15px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; margin: 5px; }
-        #btn-modifica { background: #21262d; color: white; border: 1px solid #30363d; }
-        #btn-salva, #btn-aggiungi { background: #238636; color: white; display: none; }
+        button { padding: 8px 12px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; margin: 5px; }
+        .btn-admin { background: #238636; color: white; display: none; }
         
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
         .theme-banner { background: #800000; color: white; padding: 25px; text-align: center; border-radius: 12px; margin-bottom: 25px; border: 1px solid #30363d; }
         
-        /* BACHECA CON SCROLLBAR */
-        .card { background: #161b22; padding: 20px; border-radius: 12px; border: 1px solid #30363d; }
-        #area-bacheca { 
-            max-height: 400px; /* Altezza massima della bacheca */
-            overflow-y: auto;  /* Attiva lo scorrimento verticale */
-            padding-right: 10px;
-        }
-
-        /* Stile barra di scorrimento */
-        #area-bacheca::-webkit-scrollbar { width: 8px; }
-        #area-bacheca::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
+        .card { background: #161b22; padding: 20px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 20px; }
+        #area-bacheca { max-height: 400px; overflow-y: auto; padding-right: 10px; }
 
         .avviso { background: #0d1117; border-left: 5px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 6px; color: #c9d1d9; }
-        .btn-link { display: inline-block; margin-top: 10px; background: #1f6feb; color: white !important; text-decoration: none; padding: 8px 15px; border-radius: 5px; font-size: 0.85rem; font-weight: bold; }
-        .editable-active { border: 2px dashed #ffc107 !important; background: #1c2128 !important; padding: 10px; }
+        .btn-link { display: inline-block; margin-top: 10px; background: #1f6feb; color: white !important; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 0.8rem; }
+        
+        /* Sezioni Messaggi */
+        .sezione-messaggi { background: #161b22; border-radius: 8px; padding: 10px; border: 1px solid #30363d; }
+        .lista-msg { max-height: 200px; overflow-y: auto; margin-bottom: 10px; font-size: 0.85rem; }
+        .msg-item { border-bottom: 1px solid #21262d; padding: 8px 0; }
+        .msg-privato { border-left: 3px solid #e74c3c; padding-left: 10px; margin-bottom: 10px; background: #1c1112; }
+        
+        .input-box { display: flex; gap: 5px; margin-top: 10px; }
+        .input-box input { flex-grow: 1; padding: 8px; border-radius: 4px; border: 1px solid #30363d; background: #0d1117; color: white; }
+        
+        #pannello-privato { display: none; border: 2px solid #e74c3c; }
+        .editable-active { border: 2px dashed #ffc107 !important; background: #1c2128 !important; }
         footer { text-align: center; color: #8b949e; font-size: 0.8rem; margin-top: 30px; }
     </style>
 </head>
@@ -37,25 +38,45 @@
 
     <div class="admin-panel">
         🔐 Area Riservata: 
-        <button id="btn-modifica" onclick="verificaPassword()">Accedi per Modificare</button>
-        <button id="btn-aggiungi" onclick="aggiungiNuovoAvviso()">+ Nuovo Avviso</button>
-        <button id="btn-salva" onclick="pubblicaModifiche()">💾 Pubblica per Tutti</button>
+        <button id="btn-modifica" onclick="verificaPassword()">Accedi Manager</button>
+        <button class="btn-admin" onclick="aggiungiNuovoAvviso()">+ Nuovo Avviso</button>
+        <button class="btn-admin" onclick="pubblicaModifiche()">💾 Salva Modifiche</button>
+        <button class="btn-admin" onclick="svuotaPrivati()" style="background:#e74c3c">🗑️ Svuota Posta</button>
     </div>
 
     <header>
-        <h1>Gruppo Oratorio</h1>
+        <h1>Gruppo Oratorio San Luigi</h1>
         <p>Comunicazioni ufficiali</p>
     </header>
 
     <div class="container">
+        <div class="card" id="pannello-privato">
+            <h3 style="color: #e74c3c;">📩 Posta in Arrivo (Privata)</h3>
+            <div id="lista-privati" class="lista-msg">Nessun messaggio privato.</div>
+        </div>
+
         <div class="theme-banner" id="area-spettacolo">
-            <h2>Caricamento...</h2>
+            <h2>Caricamento dati...</h2>
         </div>
 
         <div class="card">
             <h3>Bacheca Avvisi</h3>
-            <div id="area-bacheca">
-                <p>Aggiornamento avvisi...</p>
+            <div id="area-bacheca"></div>
+            
+            <hr style="border: 0; border-top: 1px solid #30363d; margin: 20px 0;">
+            
+            <h3>Chat Pubblica / Commenti</h3>
+            <div class="sezione-messaggi">
+                <div id="lista-pubblici" class="lista-msg"></div>
+                <div class="input-box">
+                    <input type="text" id="nome-user" placeholder="Tuo Nome" style="width: 30%;">
+                    <input type="text" id="testo-pubblico" placeholder="Scrivi a tutti...">
+                    <button onclick="inviaMessaggio('pubblico')" style="background: #238636; color: white;">Invia</button>
+                </div>
+                <div class="input-box">
+                    <input type="text" id="testo-privato" placeholder="Invia messaggio privato al manager...">
+                    <button onclick="inviaMessaggio('privato')" style="background: #e74c3c; color: white;">Invia Privato 🔒</button>
+                </div>
             </div>
         </div>
         <footer>&copy; 2026 Oratorio San Luigi | creato da Manuel Manera</footer>
@@ -63,7 +84,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBELSJN5Kj8JfeeWPHIzkGrYzEHVHFG1_c",
@@ -79,67 +100,92 @@
         const db = getDatabase(app);
         const CHIAVE_ACCESSO = "PeppinoBomber";
 
-        // Funzione migliorata per i link (evita di cancellare il testo)
-        function generaPulsantiLink(testo) {
-            if (!testo) return "";
-            const regexLink = /(https?:\/\/[^\s<>]+)/g;
-            return testo.replace(regexLink, function(url) {
-                // Manteniamo il link visibile nel testo e aggiungiamo il pulsante sotto
-                return `${url}<br><a href="${url}" target="_blank" class="btn-link">🔗 Visualizza Link</a>`;
-            });
-        }
-
+        // 1. CARICAMENTO AVVISI
         onValue(ref(db, 'teatro/'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 document.getElementById('area-spettacolo').innerHTML = data.spettacolo;
-                // Importante: quando leggiamo, trasformiamo i link in pulsanti
-                document.getElementById('area-bacheca').innerHTML = generaPulsantiLink(data.bacheca);
+                document.getElementById('area-bacheca').innerHTML = trasformaLink(data.bacheca);
             }
         });
 
-        window.verificaPassword = function() {
-            let psw = prompt("Inserisci il codice segreto:");
-            if (psw === CHIAVE_ACCESSO) {
-                // In modalità modifica, mostriamo i link nudi senza pulsanti per poterli editare
-                document.getElementById('area-spettacolo').contentEditable = "true";
-                document.getElementById('area-bacheca').contentEditable = "true";
-                document.getElementById('area-spettacolo').classList.add('editable-active');
-                document.getElementById('area-bacheca').classList.add('editable-active');
-                
-                document.getElementById('btn-modifica').style.display = "none";
-                document.getElementById('btn-salva').style.display = "inline-block";
-                document.getElementById('btn-aggiungi').style.display = "inline-block";
-                
-                // Rimuoviamo temporaneamente i pulsanti grafici per pulire il testo da editare
-                const linkButtons = document.querySelectorAll('.btn-link');
-                linkButtons.forEach(btn => btn.remove());
-            } else { alert("Codice errato."); }
+        function trasformaLink(testo) {
+            const regexLink = /(https?:\/\/[^\s<>]+)/g;
+            return testo.replace(regexLink, (url) => `<br><a href="${url}" target="_blank" class="btn-link">🔗 Visualizza Allegato</a>`);
         }
 
-        window.aggiungiNuovoAvviso = function() {
-            const bacheca = document.getElementById('area-bacheca');
-            const dataOggi = new Date().toLocaleDateString('it-IT');
-            const nuovoAvviso = `<div class="avviso"><strong>${dataOggi}:</strong> Scrivi qui...</div>`;
-            bacheca.innerHTML = nuovoAvviso + bacheca.innerHTML;
-        }
+        // 2. CHAT PUBBLICA
+        onValue(ref(db, 'chat_pubblica/'), (snapshot) => {
+            const div = document.getElementById('lista-pubblici');
+            div.innerHTML = "";
+            snapshot.forEach((c) => {
+                const m = c.val();
+                div.innerHTML += `<div class="msg-item"><b>${m.nome}:</b> ${m.testo} <small style="color:#484f58;">${m.ora}</small></div>`;
+            });
+            div.scrollTop = div.scrollHeight;
+        });
 
-        window.pubblicaModifiche = function() {
-            const bachElement = document.getElementById('area-bacheca');
-            // Prima di salvare, facciamo una copia e puliamo via i pulsanti link
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = bachElement.innerHTML;
-            const buttons = tempDiv.querySelectorAll('.btn-link');
-            buttons.forEach(b => b.remove());
-
-            set(ref(db, 'teatro/'), {
-                spettacolo: document.getElementById('area-spettacolo').innerHTML,
-                bacheca: tempDiv.innerHTML // Salviamo solo il testo pulito
-            }).then(() => {
-                alert("Sito aggiornato!");
-                location.reload();
+        // 3. MESSAGGI PRIVATI (Solo caricati se manager accede)
+        function caricaPrivati() {
+            onValue(ref(db, 'chat_privata/'), (snapshot) => {
+                const div = document.getElementById('lista-privati');
+                div.innerHTML = "";
+                snapshot.forEach((c) => {
+                    const m = c.val();
+                    div.innerHTML += `<div class="msg-item msg-privato"><b>DA: ${m.nome}</b><br>${m.testo} <br><small>${m.ora}</small></div>`;
+                });
             });
         }
+
+        window.inviaMessaggio = function(tipo) {
+            const nome = document.getElementById('nome-user').value || "Anonimo";
+            const idInput = tipo === 'pubblico' ? 'testo-pubblico' : 'testo-privato';
+            const testo = document.getElementById(idInput).value;
+            
+            if(!testo) return;
+
+            const percorso = tipo === 'pubblico' ? 'chat_pubblica/' : 'chat_privata/';
+            push(ref(db, percorso), {
+                nome: nome,
+                testo: testo,
+                ora: new Date().toLocaleString()
+            });
+
+            document.getElementById(idInput).value = "";
+            alert(tipo === 'privato' ? "Messaggio privato inviato con successo!" : "Messaggio inviato.");
+        };
+
+        // 4. AMMINISTRAZIONE
+        window.verificaPassword = function() {
+            if (prompt("Codice Manager:") === CHIAVE_ACCESSO) {
+                document.querySelectorAll(".btn-admin").forEach(b => b.style.display = "inline-block");
+                document.getElementById('btn-modifica').style.display = "none";
+                document.getElementById('pannello-privato').style.display = "block";
+                document.getElementById('area-spettacolo').contentEditable = true;
+                document.getElementById('area-bacheca').contentEditable = true;
+                document.getElementById('area-bacheca').classList.add("editable-active");
+                document.querySelectorAll('.btn-link').forEach(b => b.remove());
+                caricaPrivati();
+            } else { alert("Accesso negato."); }
+        };
+
+        window.svuotaPrivati = function() {
+            if(confirm("Vuoi cancellare tutti i messaggi privati letti?")) {
+                remove(ref(db, 'chat_privata/'));
+            }
+        };
+
+        window.aggiungiNuovoAvviso = function() {
+            const b = document.getElementById('area-bacheca');
+            b.innerHTML = `<div class="avviso"><strong>${new Date().toLocaleDateString()}:</strong> Scrivi qui...</div>` + b.innerHTML;
+        };
+
+        window.pubblicaModifiche = function() {
+            const temp = document.createElement('div');
+            temp.innerHTML = document.getElementById('area-bacheca').innerHTML;
+            temp.querySelectorAll('.btn-link').forEach(l => l.remove());
+            set(ref(db, 'teatro/'), { spettacolo: document.getElementById('area-spettacolo').innerHTML, bacheca: temp.innerHTML }).then(() => location.reload());
+        };
     </script>
 </body>
 </html>
