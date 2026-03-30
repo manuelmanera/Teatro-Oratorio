@@ -5,52 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionale Oratorio San Luigi</title>
     <style>
-        :root { --bg: #0b0e14; --card: #161b22; --border: #30363d; --accent: #ffc107; --pinned: #2c250d; }
+        :root { --bg: #0b0e14; --card: #161b22; --border: #30363d; --accent: #ffc107; --danger: #e74c3c; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
-        .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; }
+        .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
         button { padding: 8px 12px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
-        .btn-admin { background: #238636; color: white; display: none; margin: 2px; }
+        .btn-admin { background: #238636; color: white; display: none; }
+        .btn-reset { background: var(--danger); color: white; display: none; border: 2px solid black; }
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
         .theme-banner { background: #800000; padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
         #nuovo-avviso-box { display: none; background: var(--card); padding: 15px; border-radius: 10px; border: 2px solid var(--accent); margin-bottom: 20px; }
         .input-admin { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: 1px solid var(--border); background: #0d1117; color: white; box-sizing: border-box; }
         .bacheca-container { max-height: 600px; overflow-y: auto; background: var(--card); border-radius: 12px; padding: 10px; border: 1px solid var(--border); }
-        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 15px; margin-bottom: 15px; border-radius: 6px; position: relative; }
-        .avviso-card.pinned { background: var(--pinned); border: 1px solid var(--accent); }
-        .testo-avviso { font-size: 1.1rem; line-height: 1.4; margin-bottom: 10px; outline: none; min-height: 20px; }
+        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 15px; margin-bottom: 15px; border-radius: 6px; }
+        .testo-avviso { font-size: 1.1rem; line-height: 1.4; margin-bottom: 10px; outline: none; }
         .testo-editabile { background: #1c2128; border: 1px dashed var(--accent); padding: 5px; border-radius: 4px; }
-        .footer-avviso { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 10px; }
+        .btn-link-blu { display: inline-block; background: #1f6feb; color: white; text-decoration: none; padding: 8px 15px; border-radius: 6px; margin-top: 10px; font-weight: bold; }
         .mgr-btns { display: none; gap: 5px; margin-top: 10px; width: 100%; justify-content: flex-end; }
-        .btn-del { background: #e74c3c; color: white; border: 1px solid white; }
-        .btn-pin { background: #f39c12; color: white; }
-        .btn-save-edit { background: #1f6feb; color: white; }
+        footer { text-align: center; color: #8b949e; font-size: 0.8rem; margin: 30px 0; }
     </style>
 </head>
 <body>
 
     <div class="admin-panel">
-        🔐 <b>Manager Dashboard</b> 
-        <button id="btn-login" onclick="login()">Accedi</button>
+        <button id="btn-login" onclick="login()">🔐 Accesso Manager</button>
         <button class="btn-admin" onclick="mostraBoxNuovo()">+ Nuovo Avviso</button>
         <button class="btn-admin" onclick="salvaTitolo()" style="background:#1f6feb">💾 Salva Titolo</button>
+        <button id="btn-reset-all" class="btn-reset" onclick="resetTotale()">⚠️ RESET BACHECA</button>
     </div>
 
     <div class="container">
         <div class="theme-banner" id="area-spettacolo"><h2>Caricamento...</h2></div>
         
         <div id="nuovo-avviso-box">
-            <h4>Crea Nuovo Avviso</h4>
-            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi qui..."></textarea>
+            <h4>Scrivi Messaggio (incolla link se vuoi)</h4>
+            <textarea id="testo-nuovo" class="input-admin" rows="3"></textarea>
             <button onclick="pubblicaNuovo()" style="background:#238636; color:white; width:100%;">PUBBLICA</button>
         </div>
 
-        <h3>Bacheca Ufficiale</h3>
+        <h3>Bacheca Comunicazioni</h3>
         <div class="bacheca-container" id="area-bacheca"></div>
+        <footer>&copy; 2026 Oratorio San Luigi | creato da Manuel Manera</footer>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, push, remove, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBELSJN5Kj8JfeeWPHIzkGrYzEHVHFG1_c",
@@ -66,37 +65,39 @@
         let isManager = false;
 
         onValue(ref(db, 'teatro/'), (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                document.getElementById('area-spettacolo').innerHTML = data.spettacolo || "<h2>Titolo</h2>";
-                renderBacheca(data.bacheca_dati || {});
-            } else { renderBacheca({}); }
+            const data = snapshot.val() || {};
+            document.getElementById('area-spettacolo').innerHTML = data.spettacolo || "<h2>Gruppo Oratorio</h2>";
+            renderBacheca(data.bacheca_dati || {});
         });
 
         function renderBacheca(dati) {
             const container = document.getElementById('area-bacheca');
             container.innerHTML = ""; 
-            
-            let listaAvvisiRaw = Object.keys(dati).map(key => ({ id: key, ...dati[key] }));
-            listaAvvisiRaw.sort((a, b) => (b.pinned || 0) - (a.pinned || 0) || b.timestamp - a.timestamp);
+            let lista = Object.keys(dati).map(key => ({ id: key, ...dati[key] }));
+            lista.sort((a, b) => b.timestamp - a.timestamp);
 
-            if (listaAvvisiRaw.length === 0) {
+            if (lista.length === 0) {
                 container.innerHTML = "<p style='text-align:center; color:#8b949e;'>Nessun avviso presente.</p>";
                 return;
             }
 
-            listaAvvisiRaw.forEach((avv) => {
+            lista.forEach((avv) => {
                 const card = document.createElement('div');
-                card.className = `avviso-card ${avv.pinned ? 'pinned' : ''}`;
+                card.className = "avviso-card";
+                
+                // Trova eventuali link nel testo
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                const testoConLink = avv.testo.replace(urlRegex, (url) => {
+                    return `<br><a href="${url}" target="_blank" class="btn-link-blu">🔗 Apri Link</a>`;
+                });
+
                 card.innerHTML = `
-                    <div id="txt-${avv.id}" class="testo-avviso ${isManager ? 'testo-editabile' : ''}" 
-                         contenteditable="${isManager}">${avv.testo}</div>
+                    <div id="txt-${avv.id}" class="testo-avviso ${isManager ? 'testo-editabile' : ''}" contenteditable="${isManager}">${avv.testo}</div>
                     <div class="footer-avviso">
                         <small>${avv.data}</small>
                         <div class="mgr-btns" style="${isManager ? 'display:flex' : 'none'}">
-                            <button class="btn-save-edit" onclick="salvaModifica('${avv.id}')">SALVA</button>
-                            <button class="btn-pin" onclick="pinAvviso('${avv.id}', ${!avv.pinned})">${avv.pinned ? '📌 Fix' : 'Fix'}</button>
-                            <button class="btn-del" onclick="eliminaAvviso('${avv.id}')">🗑️ ELIMINA</button>
+                            <button onclick="salvaModifica('${avv.id}')" style="background:#1f6feb; color:white">SALVA</button>
+                            <button onclick="eliminaAvviso('${avv.id}')" style="background:#e74c3c; color:white">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -105,54 +106,48 @@
         }
 
         window.login = function() {
-            if(prompt("Password:") === PWD) {
+            if(prompt("Password Manager:") === PWD) {
                 isManager = true;
-                document.querySelectorAll(".btn-admin").forEach(b => b.style.display = "inline-block");
+                document.querySelectorAll(".btn-admin, .btn-reset").forEach(b => b.style.display = "inline-block");
                 document.getElementById('btn-login').style.display = "none";
                 document.getElementById('area-spettacolo').contentEditable = true;
-                onValue(ref(db, 'teatro/'), (s) => renderBacheca(s.val()?.bacheca_dati || {}), {onlyOnce: true});
+                alert("Modalità Manager Attiva. Usa il tasto rosso per pulire tutto o crea nuovi avvisi.");
             }
         };
 
-        // FUNZIONE DI ELIMINAZIONE POTENZIATA
+        window.resetTotale = function() {
+            if(confirm("Vuoi Svuotare COMPLETAMENTE la bacheca? Questa azione non si può annullare.")) {
+                set(ref(db, 'teatro/bacheca_dati'), null).then(() => alert("Bacheca pulita!"));
+            }
+        };
+
         window.eliminaAvviso = function(id) {
-            if(confirm("Vuoi eliminare definitivamente questo avviso?")) {
-                const path = 'teatro/bacheca_dati/' + id;
-                remove(ref(db, path)).then(() => {
-                    remove(ref(db, 'commenti_v3/' + id));
-                    alert("Cancellato con successo!");
-                }).catch(() => {
-                    alert("Errore ID, provo pulizia forzata...");
-                });
+            if(confirm("Eliminare questo avviso?")) {
+                remove(ref(db, 'teatro/bacheca_dati/' + id));
             }
         };
 
         window.salvaModifica = function(id) {
             const nuovoTesto = document.getElementById('txt-'+id).innerText;
-            // Usiamo set invece di update per sovrascrivere completamente ed evitare duplicati
-            set(ref(db, 'teatro/bacheca_dati/' + id), {
-                testo: nuovoTesto,
-                data: new Date().toLocaleDateString(),
-                timestamp: Date.now(),
-                pinned: false
-            }).then(() => alert("Modifica salvata correttamente!"));
+            update(ref(db, 'teatro/bacheca_dati/' + id), { testo: nuovoTesto }).then(() => alert("Aggiornato!"));
         };
 
         window.pubblicaNuovo = function() {
             const t = document.getElementById('testo-nuovo').value;
             if(!t) return;
-            const bachecaRef = ref(db, 'teatro/bacheca_dati');
-            push(bachecaRef, { testo: t, data: new Date().toLocaleDateString(), timestamp: Date.now(), pinned: false })
-            .then(() => {
-                document.getElementById('testo-nuovo').value = "";
-                document.getElementById('nuovo-avviso-box').style.display = 'none';
+            push(ref(db, 'teatro/bacheca_dati'), { 
+                testo: t, 
+                data: new Date().toLocaleDateString(), 
+                timestamp: Date.now() 
             });
+            document.getElementById('testo-nuovo').value = "";
+            document.getElementById('nuovo-avviso-box').style.display = 'none';
         };
 
-        window.pinAvviso = function(id, status) { update(ref(db, 'teatro/bacheca_dati/' + id), { pinned: status }); };
         window.salvaTitolo = function() {
-            set(ref(db, 'teatro/spettacolo'), document.getElementById('area-spettacolo').innerHTML).then(() => alert("Titolo salvato!"));
+            set(ref(db, 'teatro/spettacolo'), document.getElementById('area-spettacolo').innerHTML).then(() => alert("Titolo Spettacolo salvato!"));
         };
+
         window.mostraBoxNuovo = function() { document.getElementById('nuovo-avviso-box').style.display = "block"; };
     </script>
 </body>
