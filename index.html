@@ -5,36 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionale Oratorio San Luigi</title>
     <style>
-        :root { --bg: #0b0e14; --card: #161b22; --border: #30363d; --accent: #ffc107; --danger: #e74c3c; --success: #238636; --info: #1f6feb; }
+        :root { --bg: #0b0e14; --card: #161b22; --border: #30363d; --accent: #ffc107; --danger: #e74c3c; --success: #238636; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
         
-        .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; }
+        /* Pannello Admin Giallo come prima */
+        .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
         button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
         
-        /* Visibilità Ruoli */
+        /* Protezione Visiva Funzionalità */
         .btn-admin, .mgr-btns, #btn-dev-only { display: none !important; }
         body.manager-active .btn-admin, body.manager-active .mgr-btns { display: flex !important; }
         body.dev-mode #btn-dev-only { display: block !important; }
 
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
         
-        /* Card Avviso */
-        .avviso-card { background: var(--card); border-left: 5px solid var(--border); padding: 18px; margin-bottom: 15px; border-radius: 8px; position: relative; }
-        .is-pinned { border: 2px solid var(--accent) !important; background: #21262d !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.2); }
-        .pin-icon { position: absolute; top: 10px; right: 10px; font-size: 1.2rem; }
-
-        /* Badge di Stato */
-        .badge-stato { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; margin-bottom: 8px; display: inline-block; }
-        .stato-APERTO { background: var(--success); color: white; }
-        .stato-CHIUSO { background: var(--danger); color: white; }
-        .stato-ULTIMI { background: #d35400; color: white; }
-        .stato-INFO { background: var(--info); color: white; }
-
-        .input-admin { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: #0d1117; color: white; }
+        /* RITORNO AI RIQUADRI ROSSI ORIGINALI */
+        .banner-box {
+            background: #800000; 
+            padding: 20px; 
+            text-align: center; 
+            border-radius: 12px; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        .banner-box-titolo { font-size: 2.2rem !important; font-weight: 900 !important; text-transform: uppercase; }
+        .banner-box-desc { font-size: 1.2rem !important; font-weight: 400 !important; margin-bottom: 25px; }
         
-        .log-item { font-size: 0.8rem; border-bottom: 1px solid #333; padding: 5px 0; color: #8b949e; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
-        .modal-content { max-width: 500px; margin: 30px auto; background: var(--card); padding: 25px; border-radius: 15px; }
+        /* Card Avviso Stile Originale con Pin */
+        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; position: relative; }
+        .is-pinned { border: 2px solid var(--accent) !important; background: #1a1a1a !important; }
+        
+        /* Badge Tag Operativi */
+        .badge-stato { padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; display: inline-block; }
+        .stato-APERTO { background: var(--success); }
+        .stato-CHIUSO { background: var(--danger); }
+        .stato-ULTIMI { background: #ff6600; }
+        .stato-INFO { background: #1f6feb; }
+
+        .input-admin { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: #0d1117; color: white; box-sizing: border-box; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; }
+        .modal-content { max-width: 450px; margin: 50px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
@@ -47,12 +58,13 @@
     </div>
 
     <div class="container">
-        <div id="banner-titolo" class="banner-box" style="text-align:center; font-size:2rem; font-weight:900; margin-bottom:10px;">ORATORIO SAN LUIGI</div>
+        <div id="banner-titolo" class="banner-box banner-box-titolo">GRUPPO ORATORIO</div>
+        <div id="banner-desc" class="banner-box banner-box-desc">Comunicazioni Ufficiali</div>
         
-        <div id="nuovo-avviso-box" style="display:none; background:#1c2128; padding:15px; border-radius:10px; border:1px solid var(--accent); margin-bottom:20px;">
+        <div id="nuovo-avviso-box" style="display:none; background:var(--card); padding:15px; border-radius:10px; border:2px solid var(--accent); margin-bottom:20px;">
             <select id="new-tag" class="input-admin">
-                <option value="INFO">ℹ️ INFO (Semplice)</option>
-                <option value="APERTO">🟢 APERTO (Iscrizioni/Attività)</option>
+                <option value="INFO">ℹ️ INFO</option>
+                <option value="APERTO">🟢 APERTO</option>
                 <option value="ULTIMI">🟡 ULTIMI POSTI</option>
                 <option value="CHIUSO">🔴 CHIUSO</option>
             </select>
@@ -60,22 +72,20 @@
             <button onclick="pubblicaNuovo()" style="background:var(--success); color:white; width:100%;">PUBBLICA</button>
         </div>
 
+        <h3 style="margin-top:30px;">Bacheca Ufficiale</h3>
         <div id="area-bacheca"></div>
     </div>
 
     <div id="modal-dev" class="modal">
         <div class="modal-content">
-            <h3>👥 Gestione Utenze</h3>
-            <div id="lista-utenti-db"></div>
-            <input type="text" id="new-user-name" class="input-admin" placeholder="Username">
-            <input type="text" id="new-user-pass" class="input-admin" placeholder="Password">
-            <button onclick="aggiungiUtente()" style="width:100%; background:var(--success); color:white; margin-bottom:20px;">Crea Utente</button>
-            
+            <h3>👥 Utenti & 📜 Log</h3>
+            <div id="lista-utenti-db" style="max-height:150px; overflow-y:auto; margin-bottom:10px;"></div>
+            <input type="text" id="new-user-name" class="input-admin" placeholder="Nome">
+            <input type="text" id="new-user-pass" class="input-admin" placeholder="Pass">
+            <button onclick="aggiungiUtente()" style="width:100%; background:var(--success); color:white;">Crea</button>
             <hr>
-            <h3>📜 Registro Attività (Log)</h3>
-            <div id="lista-log" style="max-height:200px; overflow-y:auto; background:#0d1117; padding:10px; border-radius:5px;"></div>
-            
-            <button onclick="document.getElementById('modal-dev').style.display='none'" style="width:100%; margin-top:20px;">Chiudi</button>
+            <div id="lista-log" style="max-height:150px; overflow-y:auto; font-size:0.8rem; background:black; padding:5px;"></div>
+            <button onclick="document.getElementById('modal-dev').style.display='none'" style="width:100%; margin-top:10px;">Chiudi</button>
         </div>
     </div>
 
@@ -115,14 +125,13 @@
                 const card = document.createElement('div');
                 card.className = `avviso-card ${avv.pinned ? 'is-pinned' : ''}`;
                 card.innerHTML = `
-                    ${avv.pinned ? '<span class="pin-icon">📌</span>' : ''}
                     <span class="badge-stato stato-${avv.tag || 'INFO'}">${avv.tag || 'INFO'}</span>
-                    <div id="txt-${id}" class="testo-avviso">${avv.testo}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                    <div class="testo-avviso">${avv.testo}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-top:1px solid #333; padding-top:5px;">
                         <small style="color:gray;">${avv.data} - ${avv.autore}</small>
                         <div class="mgr-btns">
-                            ${session.isMaster ? `<button onclick="togglePin('${id}', ${!!avv.pinned})" style="background:none; font-size:1.2rem;">${avv.pinned ? '📍' : '📌'}</button>` : ''}
-                            <button onclick="eliminaAvviso('${id}', '${avv.testo}')" style="background:var(--danger); color:white; font-size:10px;">Elimina</button>
+                            ${session.isMaster ? `<button onclick="togglePin('${id}', ${!!avv.pinned})" style="background:none;">${avv.pinned ? '📍' : '📌'}</button>` : ''}
+                            <button onclick="eliminaAvviso('${id}', '${avv.testo}')" style="background:var(--danger); color:white; font-size:10px; border-radius:4px;">X</button>
                         </div>
                     </div>`;
                 container.appendChild(card);
@@ -148,55 +157,35 @@
         window.pubblicaNuovo = () => {
             const t = document.getElementById('testo-nuovo').value, tag = document.getElementById('new-tag').value;
             if(!t) return;
-            const nuovoAvviso = { testo: t, tag: tag, autore: session.user, data: new Date().toLocaleDateString('it-IT'), timestamp: Date.now(), pinned: false };
-            push(ref(db, 'teatro/bacheca_dati'), nuovoAvviso);
-            scriviLog(`Pubblicato: "${t.substring(0,20)}..."`);
+            push(ref(db, 'teatro/bacheca_dati'), { testo: t, tag: tag, autore: session.user, data: new Date().toLocaleDateString('it-IT'), timestamp: Date.now(), pinned: false });
+            push(ref(db, 'logs/'), { utente: session.user, azione: `Creato: ${t.substring(0,15)}`, data: new Date().toLocaleString() });
             document.getElementById('testo-nuovo').value = "";
             document.getElementById('nuovo-avviso-box').style.display = 'none';
         };
 
-        window.togglePin = (id, currentStatus) => {
-            update(ref(db, `teatro/bacheca_dati/${id}`), { pinned: !currentStatus });
-            scriviLog(`${!currentStatus ? 'Pinnato' : 'Spinnato'} avviso ${id}`);
-        };
-
+        window.togglePin = (id, currentStatus) => update(ref(db, `teatro/bacheca_dati/${id}`), { pinned: !currentStatus });
         window.eliminaAvviso = (id, testo) => {
             if(confirm("Eliminare?")) {
                 remove(ref(db, `teatro/bacheca_dati/${id}`));
-                scriviLog(`Eliminato: "${testo.substring(0,20)}..."`);
+                push(ref(db, 'logs/'), { utente: session.user, azione: `Eliminato: ${testo.substring(0,15)}`, data: new Date().toLocaleString() });
             }
         };
-
-        function scriviLog(azione) {
-            push(ref(db, 'logs/'), { utente: session.user, azione: azione, data: new Date().toLocaleString('it-IT') });
-        }
 
         window.apriPannelloDev = () => {
             document.getElementById('modal-dev').style.display = 'block';
             onValue(ref(db, 'utenti/'), (snap) => {
                 const list = document.getElementById('lista-utenti-db'); list.innerHTML = "";
-                Object.keys(snap.val() || {}).forEach(id => {
-                    list.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <span>${snap.val()[id].nome}</span>
-                        <button onclick="rimuoviUtente('${id}')" style="background:red; color:white; padding:2px 5px;">X</button>
-                    </div>`;
-                });
+                Object.keys(snap.val() || {}).forEach(id => { list.innerHTML += `<div>${snap.val()[id].nome} <button onclick="remove(ref(db,'utenti/${id}'))">X</button></div>`; });
             }, {onlyOnce: true});
             onValue(ref(db, 'logs/'), (snap) => {
                 const logDiv = document.getElementById('lista-log'); logDiv.innerHTML = "";
-                const logs = Object.values(snap.val() || {}).reverse();
-                logs.forEach(l => logDiv.innerHTML += `<div class="log-item"><b>${l.data}</b> - ${l.utente}: ${l.azione}</div>`);
+                Object.values(snap.val() || {}).reverse().forEach(l => logDiv.innerHTML += `<div>${l.data} - ${l.utente}: ${l.azione}</div>`);
             }, {onlyOnce: true});
         };
 
-        window.aggiungiUtente = () => {
-            const n = document.getElementById('new-user-name').value, p = document.getElementById('new-user-pass').value;
-            if(n && p) push(ref(db, 'utenti/'), { nome: n, pass: p });
-        };
-        window.rimuoviUtente = (id) => remove(ref(db, `utenti/${id}`));
+        window.aggiungiUtente = () => { push(ref(db, 'utenti/'), { nome: document.getElementById('new-user-name').value, pass: document.getElementById('new-user-pass').value }); };
         window.apriLogin = () => document.getElementById('modal-login').style.display = 'block';
         window.logout = () => location.reload();
     </script>
 </body>
 </html>
-
