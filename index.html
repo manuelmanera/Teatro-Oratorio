@@ -9,36 +9,39 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
         
         .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
+        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.2s; }
         
-        .btn-admin, .mgr-btns, #btn-dev-only { display: none !important; }
+        /* Visibilità dinamica */
+        .btn-admin, .mgr-btns, #btn-dev-only, #btn-save-titles { display: none !important; }
         body.manager-active .btn-admin, body.manager-active .mgr-btns { display: flex !important; }
         body.dev-mode #btn-dev-only { display: block !important; }
+        body.can-edit-titles #btn-save-titles { display: block !important; }
 
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
         
-        /* Banner Rossi Originali */
-        .banner-box { background: #800000; padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; }
+        /* Grafica Originale Rossa */
+        .banner-box { background: #800000; padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; outline: none; }
         .banner-box-titolo { font-size: 2.2rem !important; font-weight: 900 !important; text-transform: uppercase; }
-        
-        /* Card Avviso */
-        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; position: relative; }
-        .is-pinned { border: 2px solid var(--accent) !important; background: #1a1a1a !important; }
-        .testo-avviso { font-size: 1.1rem; line-height: 1.4; outline: none; }
-        .edit-mode { background: #1c2128; border: 1px dashed var(--accent); padding: 5px; }
+        .edit-active { border: 2px dashed #ffc107 !important; background: #600000; cursor: text; }
 
-        /* Tag e Commenti */
+        /* Card Avviso */
+        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; position: relative; border: 1px solid var(--border); }
+        .is-pinned { border: 2px solid var(--accent) !important; background: #1a1a1a !important; }
+        .testo-avviso { font-size: 1.1rem; line-height: 1.4; outline: none; padding: 5px; border-radius: 4px; }
+        .testo-editable:focus { background: #1c2128; border: 1px dashed var(--accent); }
+
         .badge-stato { padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; display: inline-block; }
         .stato-APERTO { background: var(--success); }
         .stato-CHIUSO { background: var(--danger); }
         .stato-INFO { background: #1f6feb; }
         
-        .comment-section { margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; font-size: 0.9rem; }
-        .commento { background: #1c2128; padding: 8px; border-radius: 5px; margin-bottom: 5px; position: relative; }
+        /* Commenti */
+        .comment-section { margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; }
+        .commento { background: #1c2128; padding: 8px; border-radius: 5px; margin-bottom: 5px; font-size: 0.9rem; }
         
-        .input-admin { width: 100%; padding: 10px; margin-bottom: 5px; border-radius: 6px; border: 1px solid #333; background: #0d1117; color: white; box-sizing: border-box; }
+        .input-admin { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #333; background: #0d1117; color: white; box-sizing: border-box; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; }
-        .modal-content { max-width: 450px; margin: 50px auto; background: var(--card); padding: 25px; border-radius: 15px; }
+        .modal-content { max-width: 450px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; }
     </style>
 </head>
 <body>
@@ -47,13 +50,15 @@
         <button id="btn-login-main" onclick="apriLogin()">🔐 Accedi</button>
         <button class="btn-admin" onclick="document.getElementById('nuovo-avviso-box').style.display='block'">+ Nuovo Avviso</button>
         <button id="btn-dev-only" onclick="apriPannelloDev()" style="background:white; color:black;">🛡️ Pannello Manuel</button>
+        <button id="btn-save-titles" onclick="salvaTuttoBanner()" style="background:#1f6feb; color:white;">💾 Salva Titoli</button>
         <button class="btn-admin" onclick="logout()" style="background:var(--danger); color:white;">Esci</button>
     </div>
 
     <div class="container">
         <div id="banner-titolo" class="banner-box banner-box-titolo">GRUPPO ORATORIO</div>
+        <div id="banner-desc" class="banner-box" style="font-size:1.2rem;">Comunicazioni Ufficiali</div>
         
-        <div id="nuovo-avviso-box" style="display:none; background:var(--card); padding:15px; border-radius:10px; border:1px solid var(--accent); margin-bottom:20px;">
+        <div id="nuovo-avviso-box" style="display:none; background:var(--card); padding:15px; border-radius:10px; border:2px solid var(--accent); margin-bottom:20px;">
             <select id="new-tag" class="input-admin">
                 <option value="INFO">ℹ️ INFO</option>
                 <option value="APERTO">🟢 APERTO</option>
@@ -66,6 +71,25 @@
         <div id="area-bacheca"></div>
     </div>
 
+    <div id="modal-login" class="modal">
+        <div class="modal-content">
+            <h3 style="text-align:center;">Area Riservata</h3>
+            <input type="text" id="login-user" class="input-admin" placeholder="Username">
+            <input type="password" id="login-pass" class="input-admin" placeholder="Password">
+            <button onclick="eseguiLogin()" style="width:100%; background:var(--accent); color:black; font-weight:bold;">ENTRA</button>
+            <button onclick="chiudiLogin()" style="width:100%; background:none; color:gray; margin-top:10px;">Annulla</button>
+        </div>
+    </div>
+
+    <div id="modal-dev" class="modal">
+        <div class="modal-content">
+            <h3>👥 Gestione & 📜 Log</h3>
+            <div id="lista-utenti-db" style="max-height:150px; overflow-y:auto; margin-bottom:15px;"></div>
+            <div id="lista-log" style="max-height:150px; overflow-y:auto; font-size:0.75rem; background:black; padding:10px; border-radius:5px; color:#888;"></div>
+            <button onclick="document.getElementById('modal-dev').style.display='none'" style="width:100%; margin-top:15px;">Chiudi</button>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -74,10 +98,16 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        let session = { user: null, isMaster: false };
+        let session = { user: null, role: null, isMaster: false };
         const MASTER_USER = "manuel.manera", MASTER_PASS = "PeppinoBomber";
 
-        onValue(ref(db, 'teatro/bacheca_dati'), (snapshot) => renderBacheca(snapshot.val() || {}));
+        // Caricamento Dati Iniziali
+        onValue(ref(db, 'teatro/'), (snap) => {
+            const d = snap.val() || {};
+            document.getElementById('banner-titolo').innerText = d.titolo_principale || "GRUPPO ORATORIO";
+            document.getElementById('banner-desc').innerText = d.descrizione_banner || "Comunicazioni Ufficiali";
+            renderBacheca(d.bacheca_dati || {});
+        });
 
         function renderBacheca(dati) {
             const container = document.getElementById('area-bacheca');
@@ -90,50 +120,92 @@
                 card.className = `avviso-card ${avv.pinned ? 'is-pinned' : ''}`;
                 card.innerHTML = `
                     <span class="badge-stato stato-${avv.tag || 'INFO'}">${avv.tag || 'INFO'}</span>
-                    <div id="txt-${id}" class="testo-avviso ${session.user ? 'edit-mode' : ''}" contenteditable="${!!session.user}">${avv.testo}</div>
-                    <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                    <div id="txt-${id}" class="testo-avviso ${session.user ? 'testo-editable' : ''}" contenteditable="${!!session.user}">${avv.testo}</div>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid #333; padding-top:8px;">
                         <small style="color:gray;">${avv.data} - ${avv.autore}</small>
                         <div class="mgr-btns">
-                            ${session.isMaster ? `<button onclick="togglePin('${id}', ${!!avv.pinned})">${avv.pinned ? '📍' : '📌'}</button>` : ''}
+                            ${session.isMaster ? `<button onclick="togglePin('${id}', ${!!avv.pinned})" style="background:none;">${avv.pinned ? '📍' : '📌'}</button>` : ''}
                             <button onclick="salvaModifica('${id}')" style="background:blue; color:white; font-size:10px; margin-right:5px;">Salva</button>
-                            <button onclick="eliminaAvviso('${id}')" style="background:red; color:white; font-size:10px;">X</button>
+                            <button onclick="eliminaAvviso('${id}')" style="background:red; color:white; font-size:10px;">Elimina</button>
                         </div>
                     </div>
                     <div class="comment-section">
                         <div id="lista-comm-${id}"></div>
-                        <div style="display:flex; gap:5px; margin-top:5px;">
-                            <input type="text" id="in-comm-${id}" class="input-admin" style="margin:0" placeholder="Scrivi un commento...">
-                            <button onclick="aggiungiCommento('${id}')" style="background:var(--accent); color:black; padding:5px 10px;">></button>
+                        <div style="display:flex; gap:5px; margin-top:8px;">
+                            <input type="text" id="in-comm-${id}" class="input-admin" style="margin:0; height:30px;" placeholder="Commenta...">
+                            <button onclick="aggiungiCommento('${id}')" style="background:var(--accent); color:black; padding:0 10px;">></button>
                         </div>
                     </div>`;
                 container.appendChild(card);
-                
-                // Carica commenti
-                onValue(ref(db, `teatro/bacheca_dati/${id}/commenti`), (s) => {
-                    const cDiv = document.getElementById(`lista-comm-${id}`);
-                    cDiv.innerHTML = "";
-                    const cDati = s.val() || {};
-                    Object.keys(cDati).forEach(cid => {
-                        cDiv.innerHTML += `<div class="commento">
-                            <b>${cDati[cid].utente}:</b> ${cDati[cid].testo}
-                            ${session.user ? `<button onclick="eliminaComm('${id}','${cid}')" style="background:none; color:red; float:right;">x</button>` : ''}
-                        </div>`;
-                    });
+                caricaCommenti(id);
+            });
+        }
+
+        window.eseguiLogin = () => {
+            const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
+            if(u === MASTER_USER && p === MASTER_PASS) { attivaSessione(u, 'Admin', true); return; }
+            onValue(ref(db, 'utenti/'), (snap) => {
+                let found = false;
+                Object.values(snap.val() || {}).forEach(usr => { if(usr.nome === u && usr.pass === p) { attivaSessione(usr.nome, usr.ruolo || 'Editor', false); found = true; } });
+                if(!found) alert("Accesso negato.");
+            }, {onlyOnce: true});
+        };
+
+        function attivaSessione(nome, ruolo, isMaster) {
+            session = { user: nome, role: ruolo, isMaster };
+            document.body.classList.add('manager-active');
+            if(isMaster) document.body.classList.add('dev-mode');
+            if(isMaster || ruolo === 'Admin') {
+                document.body.classList.add('can-edit-titles');
+                document.getElementById('banner-titolo').classList.add('edit-active');
+                document.getElementById('banner-titolo').contentEditable = true;
+                document.getElementById('banner-desc').classList.add('edit-active');
+                document.getElementById('banner-desc').contentEditable = true;
+            }
+            document.getElementById('modal-login').style.display = "none";
+            document.getElementById('btn-login-main').style.display = "none";
+            onValue(ref(db, 'teatro/bacheca_dati'), (s) => renderBacheca(s.val() || {}), {onlyOnce:true});
+        }
+
+        window.salvaTuttoBanner = () => {
+            update(ref(db, 'teatro/'), {
+                titolo_principale: document.getElementById('banner-titolo').innerText,
+                descrizione_banner: document.getElementById('banner-desc').innerText
+            }).then(() => alert("Titoli aggiornati!"));
+        };
+
+        window.salvaModifica = (id) => {
+            const nuovoTesto = document.getElementById(`txt-${id}`).innerText;
+            update(ref(db, `teatro/bacheca_dati/${id}`), { testo: nuovoTesto });
+            alert("Messaggio salvato!");
+        };
+
+        window.aggiungiCommento = (id) => {
+            const t = document.getElementById(`in-comm-${id}`).value;
+            if(!t) return;
+            push(ref(db, `teatro/bacheca_dati/${id}/commenti`), { testo: t, utente: session.user || "Visitatore", timestamp: Date.now() });
+            document.getElementById(`in-comm-${id}`).value = "";
+        };
+
+        function caricaCommenti(id) {
+            onValue(ref(db, `teatro/bacheca_dati/${id}/commenti`), (s) => {
+                const cDiv = document.getElementById(`lista-comm-${id}`);
+                cDiv.innerHTML = "";
+                const dati = s.val() || {};
+                Object.keys(dati).forEach(cid => {
+                    cDiv.innerHTML += `<div class="commento">
+                        <b>${dati[cid].utente}:</b> ${dati[cid].testo}
+                        ${session.user ? `<button onclick="remove(ref(db,'teatro/bacheca_dati/${id}/commenti/${cid}'))" style="background:none; color:red; float:right;">x</button>` : ''}
+                    </div>`;
                 });
             });
         }
 
-        // Funzioni Operative
-        window.eseguiLogin = () => { /* Logica Master/Utenti come prima */ };
-        window.salvaModifica = (id) => update(ref(db, `teatro/bacheca_dati/${id}`), { testo: document.getElementById(`txt-${id}`).innerText });
-        window.aggiungiCommento = (id) => {
-            const t = document.getElementById(`in-comm-${id}`).value;
-            if(!t) return;
-            push(ref(db, `teatro/bacheca_dati/${id}/commenti`), { testo: t, utente: session.user || "Anonimo" });
-            document.getElementById(`in-comm-${id}`).value = "";
-        };
-        window.eliminaComm = (id, cid) => remove(ref(db, `teatro/bacheca_dati/${id}/commenti/${cid}`));
-        /* ... altre funzioni (Pin, Log, Logout) ripristinate ... */
+        window.apriLogin = () => document.getElementById('modal-login').style.display='block';
+        window.chiudiLogin = () => document.getElementById('modal-login').style.display='none';
+        window.logout = () => location.reload();
+        window.togglePin = (id, cur) => update(ref(db, `teatro/bacheca_dati/${id}`), { pinned: !cur });
+        window.eliminaAvviso = (id) => { if(confirm("Eliminare?")) remove(ref(db, `teatro/bacheca_dati/${id}`)); };
     </script>
 </body>
 </html>
