@@ -9,28 +9,35 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
         
         .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
+        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.2s; }
+        button:hover { opacity: 0.8; }
         
-        /* Protezione Visiva Avanzata */
+        /* Classi per la visibilità condizionale */
         .btn-admin, .mgr-btns, #area-gestione-utenti { display: none !important; }
         body.manager-active .btn-admin, body.manager-active .mgr-btns { display: flex !important; }
         body.dev-mode #area-gestione-utenti { display: block !important; }
 
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
         
-        .banner-box { background: #800000; padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; outline: none; transition: 0.3s; }
+        .banner-box { background: #800000; padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; outline: none; }
         .banner-box-titolo { font-size: 2.2rem !important; font-weight: 900 !important; text-transform: uppercase; }
         .banner-box-desc { font-size: 1.2rem !important; font-weight: 400 !important; margin-bottom: 25px; }
-        .edit-active { border: 2px dashed #ffc107 !important; background: #600000; cursor: text; }
+        .edit-active { border: 2px dashed #ffc107 !important; background: #600000; }
 
         .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); }
-        .input-admin { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: #0d1117; color: white; box-sizing: border-box; }
+        .testo-avviso { font-size: 1.1rem; line-height: 1.5; margin-bottom: 12px; outline: none; }
+        .testo-editabile { background: #1c2128; border: 1px dashed var(--accent); padding: 5px; border-radius: 4px; }
         
-        /* Modali */
+        .input-admin { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: #0d1117; color: white; box-sizing: border-box; }
+        select.input-admin { cursor: pointer; background: #1c2128; }
+
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; }
-        .modal-content { max-width: 450px; margin: 50px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-content { max-width: 450px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
         
         .user-list-item { display: flex; justify-content: space-between; align-items: center; background: #1c2128; padding: 10px; margin-bottom: 8px; border-radius: 6px; border: 1px solid var(--border); }
+        .badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; text-transform: uppercase; }
+        .badge-admin { background: #f1c40f; color: black; }
+        .badge-editor { background: #3498db; color: white; }
     </style>
 </head>
 <body>
@@ -39,7 +46,7 @@
         <button id="btn-login-main" onclick="apriLogin()">🔐 Accedi</button>
         <button class="btn-admin" onclick="document.getElementById('nuovo-avviso-box').style.display='block'">+ Nuovo Avviso</button>
         <button id="area-gestione-utenti" onclick="apriGestioneUtenti()" style="background:white; color:black;">👥 Gestione Utenze</button>
-        <button class="btn-admin" onclick="salvaTuttoBanner()" style="background:#1f6feb; color:white;">💾 Salva Titoli</button>
+        <button id="btn-save-titles" class="btn-admin" onclick="salvaTuttoBanner()" style="background:#1f6feb; color:white;">💾 Salva Titoli</button>
         <button class="btn-admin" onclick="logout()" style="background:var(--danger); color:white;">👁️ Esci</button>
     </div>
 
@@ -48,8 +55,8 @@
         <div id="banner-desc" class="banner-box banner-box-desc">Comunicazioni Ufficiali</div>
         
         <div id="nuovo-avviso-box" style="display:none; background:var(--card); padding:15px; border-radius:10px; border:2px solid var(--accent); margin-bottom:20px;">
-            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi un nuovo messaggio per la bacheca..."></textarea>
-            <button onclick="pubblicaNuovo()" style="background:var(--success); color:white; width:100%; font-size:1rem;">PUBBLICA ORA</button>
+            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi un nuovo messaggio..."></textarea>
+            <button onclick="pubblicaNuovo()" style="background:var(--success); color:white; width:100%;">PUBBLICA</button>
         </div>
 
         <h3 style="border-bottom: 1px solid var(--border); padding-bottom: 10px;">Bacheca Avvisi</h3>
@@ -58,25 +65,28 @@
 
     <div id="modal-login" class="modal">
         <div class="modal-content">
-            <h2 style="text-align:center; color:var(--accent);">Area Riservata</h2>
-            <p style="text-align:center; color:gray;">Inserisci le tue credenziali</p>
+            <h2 style="text-align:center; color:var(--accent);">Login</h2>
             <input type="text" id="login-user" class="input-admin" placeholder="Username">
             <input type="password" id="login-pass" class="input-admin" placeholder="Password">
-            <button onclick="eseguiLogin()" style="width:100%; background:var(--accent); color:black; font-weight:bold; padding:15px; font-size:1.1rem; margin-top:10px;">ACCEDI</button>
-            <button onclick="chiudiLogin()" style="width:100%; background:transparent; color:gray; margin-top:15px; border:1px solid #333;">Chiudi</button>
+            <button onclick="eseguiLogin()" style="width:100%; background:var(--accent); color:black; font-weight:bold; padding:15px;">ENTRA</button>
+            <button onclick="chiudiLogin()" style="width:100%; background:transparent; color:gray; margin-top:10px;">Chiudi</button>
         </div>
     </div>
 
     <div id="modal-utenti" class="modal">
         <div class="modal-content">
-            <h3>👥 Pannello Gestione Utenze</h3>
-            <div id="lista-utenti-db" style="max-height: 250px; overflow-y:auto; margin-bottom:20px; border:1px solid #333; padding:5px; border-radius:5px;"></div>
+            <h3>👥 Gestione Utenze</h3>
+            <div id="lista-utenti-db" style="max-height: 200px; overflow-y:auto; margin-bottom:20px;"></div>
             <hr style="border-color:var(--border);">
-            <h4>➕ Crea nuovo account</h4>
-            <input type="text" id="new-user-name" class="input-admin" placeholder="Nome utente (es: DonLuca)">
-            <input type="text" id="new-user-pass" class="input-admin" placeholder="Password per l'utente">
-            <button onclick="aggiungiUtente()" style="width:100%; background:var(--success); color:white; padding:10px;">AGGIUNGI UTENTE</button>
-            <button onclick="document.getElementById('modal-utenti').style.display='none'" style="width:100%; background:transparent; color:white; margin-top:15px;">Chiudi</button>
+            <h4>➕ Crea Nuovo Account</h4>
+            <input type="text" id="new-user-name" class="input-admin" placeholder="Username">
+            <input type="text" id="new-user-pass" class="input-admin" placeholder="Password">
+            <select id="new-user-role" class="input-admin">
+                <option value="Editor">Editor (Solo propri post)</option>
+                <option value="Admin">Admin (Tutti i post + Titoli)</option>
+            </select>
+            <button onclick="aggiungiUtente()" style="width:100%; background:var(--success); color:white; padding:10px;">CREA UTENTE</button>
+            <button onclick="document.getElementById('modal-utenti').style.display='none'" style="width:100%; background:transparent; color:white; margin-top:10px;">Chiudi</button>
         </div>
     </div>
 
@@ -94,9 +104,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        let userLoggato = null;
-        
-        // --- TUE CREDENZIALI MASTER ---
+        let session = { user: null, role: null, isMaster: false };
         const MASTER_USER = "manuel.manera";
         const MASTER_PASS = "PeppinoBomber";
 
@@ -112,22 +120,20 @@
             container.innerHTML = ""; 
             const keys = Object.keys(dati).sort((a,b) => dati[b].timestamp - dati[a].timestamp);
             
-            if(keys.length === 0) {
-                container.innerHTML = "<p style='text-align:center; color:gray;'>Nessun avviso presente in bacheca.</p>";
-                return;
-            }
-
             keys.forEach(id => {
                 const avv = dati[id];
+                // Controllo permessi: Master e Admin modificano tutto, Editor solo i propri
+                const canEdit = session.isMaster || (session.role === 'Admin') || (session.user === avv.autore);
+                
                 const card = document.createElement('div');
                 card.className = "avviso-card";
                 card.innerHTML = `
-                    <div id="txt-${id}" class="testo-avviso ${userLoggato ? 'testo-editabile' : ''}" contenteditable="${!!userLoggato}">${avv.testo}</div>
+                    <div id="txt-${id}" class="testo-avviso ${canEdit ? 'testo-editabile' : ''}" contenteditable="${canEdit}">${avv.testo}</div>
                     <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #222; padding-top:10px;">
-                        <small style="color:#555">${avv.data} • Pubblicato da: <b>${avv.autore || 'Admin'}</b></small>
-                        <div class="mgr-btns" style="gap:5px;">
-                            <button onclick="salvaModifica('${id}')" style="background:#1f6feb; color:white; font-size:11px; border-radius:4px;">SALVA</button>
-                            <button onclick="eliminaAvviso('${id}')" style="background:var(--danger); color:white; font-size:11px; border-radius:4px;">ELIMINA</button>
+                        <small style="color:#555">${avv.data} • <b>${avv.autore || 'Admin'}</b></small>
+                        <div class="mgr-btns" style="display: ${canEdit ? 'flex' : 'none'} !important; gap:5px;">
+                            <button onclick="salvaModifica('${id}')" style="background:#1f6feb; color:white; font-size:11px;">SALVA</button>
+                            <button onclick="eliminaAvviso('${id}')" style="background:var(--danger); color:white; font-size:11px;">ELIMINA</button>
                         </div>
                     </div>`;
                 container.appendChild(card);
@@ -142,7 +148,7 @@
             const p = document.getElementById('login-pass').value.trim();
 
             if(u === MASTER_USER && p === MASTER_PASS) {
-                attivaSessione(u, true);
+                attivaSessione(u, 'Admin', true);
                 return;
             }
 
@@ -151,25 +157,33 @@
                 let trovato = false;
                 Object.values(utenti).forEach(usr => {
                     if(usr.nome === u && usr.pass === p) {
-                        attivaSessione(usr.nome, false);
+                        attivaSessione(usr.nome, usr.ruolo, false);
                         trovato = true;
                     }
                 });
-                if(!trovato) alert("Accesso negato: Username o Password errati.");
+                if(!trovato) alert("Credenziali errate.");
             }, {onlyOnce: true});
         };
 
-        function attivaSessione(nome, isDev) {
-            userLoggato = nome;
+        function attivaSessione(nome, ruolo, isMaster) {
+            session = { user: nome, role: ruolo, isMaster: isMaster };
             document.body.classList.add('manager-active');
-            if(isDev) document.body.classList.add('dev-mode');
+            if(isMaster) document.body.classList.add('dev-mode');
             
             document.getElementById('btn-login-main').style.display = "none";
+            
+            // Solo Master e Admin modificano i titoli
+            const canEditTitles = isMaster || ruolo === 'Admin';
             const t = document.getElementById('banner-titolo');
             const d = document.getElementById('banner-desc');
-            t.contentEditable = true; d.contentEditable = true;
-            t.classList.add('edit-active'); d.classList.add('edit-active');
-            
+            t.contentEditable = canEditTitles;
+            d.contentEditable = canEditTitles;
+            if(canEditTitles) {
+                t.classList.add('edit-active');
+                d.classList.add('edit-active');
+                document.getElementById('btn-save-titles').style.display = "block !important";
+            }
+
             chiudiLogin();
             onValue(ref(db, 'teatro/bacheca_dati'), (s) => renderBacheca(s.val() || {}), {onlyOnce: true});
         }
@@ -183,9 +197,10 @@
                 div.innerHTML = "";
                 const dati = snap.val() || {};
                 Object.keys(dati).forEach(id => {
+                    const u = dati[id];
                     div.innerHTML += `<div class="user-list-item">
-                        <span>👤 <b>${dati[id].nome}</b> <small style="color:gray;">(Pass: ${dati[id].pass})</small></span>
-                        <button onclick="rimuoviUtente('${id}')" style="background:var(--danger); color:white; padding:4px 8px; border-radius:4px;">Rimuovi</button>
+                        <span><b>${u.nome}</b> <span class="badge ${u.ruolo === 'Admin' ? 'badge-admin' : 'badge-editor'}">${u.ruolo}</span></span>
+                        <button onclick="rimuoviUtente('${id}')" style="background:var(--danger); color:white; padding:4px 8px;">X</button>
                     </div>`;
                 });
             });
@@ -194,40 +209,36 @@
         window.aggiungiUtente = () => {
             const n = document.getElementById('new-user-name').value.trim();
             const p = document.getElementById('new-user-pass').value.trim();
-            if(!n || !p) { alert("Compila entrambi i campi!"); return; }
-            push(ref(db, 'utenti/'), { nome: n, pass: p });
+            const r = document.getElementById('new-user-role').value;
+            if(!n || !p) return;
+            push(ref(db, 'utenti/'), { nome: n, pass: p, ruolo: r });
             document.getElementById('new-user-name').value = "";
             document.getElementById('new-user-pass').value = "";
         };
 
-        window.rimuoviUtente = (id) => { if(confirm("Sei sicuro di voler eliminare questo utente?")) remove(ref(db, 'utenti/' + id)); };
+        window.rimuoviUtente = (id) => { if(confirm("Eliminare utente?")) remove(ref(db, 'utenti/' + id)); };
 
         window.salvaTuttoBanner = () => {
             update(ref(db, 'teatro/'), {
                 titolo_principale: document.getElementById('banner-titolo').innerText,
                 descrizione_banner: document.getElementById('banner-desc').innerText
-            }).then(() => alert("Titoli aggiornati con successo!"));
+            }).then(() => alert("Titoli salvati!"));
         };
 
         window.pubblicaNuovo = () => {
             const t = document.getElementById('testo-nuovo').value;
             if(!t) return;
             push(ref(db, 'teatro/bacheca_dati'), { 
-                testo: t, 
-                autore: userLoggato, 
-                data: new Date().toLocaleDateString('it-IT'), 
-                timestamp: Date.now() 
+                testo: t, autore: session.user, 
+                data: new Date().toLocaleDateString('it-IT'), timestamp: Date.now() 
             });
             document.getElementById('testo-nuovo').value = "";
             document.getElementById('nuovo-avviso-box').style.display = 'none';
         };
 
-        window.eliminaAvviso = (id) => { if(confirm("Vuoi eliminare definitivamente questo avviso?")) remove(ref(db, 'teatro/bacheca_dati/' + id)); };
-        
+        window.eliminaAvviso = (id) => { if(confirm("Eliminare?")) remove(ref(db, 'teatro/bacheca_dati/' + id)); };
         window.salvaModifica = (id) => {
-            update(ref(db, 'teatro/bacheca_dati/' + id), { 
-                testo: document.getElementById('txt-'+id).innerText 
-            }).then(() => alert("Modifica salvata!"));
+            update(ref(db, 'teatro/bacheca_dati/' + id), { testo: document.getElementById('txt-'+id).innerText }).then(() => alert("Modifica salvata!"));
         };
     </script>
 </body>
