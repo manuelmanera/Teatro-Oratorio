@@ -9,37 +9,27 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
         
         .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
+        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.2s; }
         
-        /* Visibilità dinamica */
-        .btn-admin, .mgr-btns, #btn-dev-only, #btn-save-titles { display: none !important; }
-        body.manager-active .btn-admin, body.manager-active .mgr-btns { display: flex !important; }
+        /* Visibilità dinamica dei tasti */
+        .btn-admin, .mgr-btns, #btn-dev-only, #btn-save-titles, #btn-evento-admin { display: none !important; }
+        body.manager-active .btn-admin, body.manager-active .mgr-btns, body.manager-active #btn-evento-admin { display: flex !important; }
         body.dev-mode #btn-dev-only { display: block !important; }
         body.can-edit-titles #btn-save-titles { display: block !important; }
 
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
         
-        /* Banner Rossi */
+        /* Box Evento & Timer */
+        #box-evento { display: none; background: linear-gradient(45deg, #800000, #ff0000); padding: 20px; text-align: center; border-radius: 12px; border: 2px solid white; margin-bottom: 20px; box-shadow: 0 0 20px rgba(255,0,0,0.5); }
+        #timer-display { font-size: 2.2rem; font-weight: 900; font-family: monospace; text-shadow: 2px 2px black; }
+
         .banner-box { background: #800000; padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; outline: none; }
         .banner-box-titolo { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; }
         .edit-active { border: 2px dashed var(--accent) !important; background: #600000; }
 
-        /* BOX EVENTO / TIMER */
-        #box-evento { display: none; background: linear-gradient(45deg, #b30000, #ff0000); padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; border: 2px solid white; box-shadow: 0 0 15px rgba(255,0,0,0.4); }
-        #timer-display { font-size: 2rem; font-weight: 900; font-family: monospace; letter-spacing: 2px; text-shadow: 2px 2px black; }
-
-        /* Card Avviso */
-        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; position: relative; border: 1px solid var(--border); }
-        .is-pinned { border: 2px solid var(--accent) !important; background: #1a1a1a !important; }
-        .testo-avviso { font-size: 1.1rem; line-height: 1.4; outline: none; }
-
-        .badge-stato { padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; display: inline-block; }
-        .stato-APERTO { background: var(--success); }
-        .stato-CHIUSO { background: var(--danger); }
-        .stato-INFO { background: #1f6feb; }
-        
+        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); }
         .input-admin { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #333; background: #0d1117; color: white; box-sizing: border-box; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; }
         .modal-content { max-width: 500px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
     </style>
 </head>
@@ -48,7 +38,7 @@
     <div class="admin-panel">
         <button id="btn-login-main" onclick="apriLogin()">🔐 Accedi</button>
         <button class="btn-admin" onclick="document.getElementById('nuovo-avviso-box').style.display='block'">+ Nuovo Avviso</button>
-        <button class="btn-admin" onclick="document.getElementById('modal-evento').style.display='block'" style="background:#ff6600; color:white;">⏲️ Imposta Evento</button>
+        <button id="btn-evento-admin" onclick="document.getElementById('modal-evento').style.display='block'" style="background:#ff6600; color:white;">⏲️ Imposta Evento</button>
         <button id="btn-dev-only" onclick="apriPannelloDev()" style="background:white; color:black;">⚙️ Impostazioni Utenti</button>
         <button id="btn-save-titles" onclick="salvaTuttoBanner()" style="background:#1f6feb; color:white;">💾 Salva Titoli</button>
         <button class="btn-admin" onclick="logout()" style="background:var(--danger); color:white;">Esci</button>
@@ -59,13 +49,8 @@
         <div id="banner-desc" class="banner-box" style="font-size:1.2rem;">Comunicazioni Ufficiali</div>
         
         <div id="box-evento">
-            <h3 id="titolo-evento-display" style="margin:0 0 10px 0; text-transform: uppercase;">PROSSIMO APPUNTAMENTO</h3>
+            <h3 id="titolo-evento-display" style="margin:0 0 10px 0;">PROSSIMO EVENTO</h3>
             <div id="timer-display">00:00:00:00</div>
-        </div>
-
-        <div id="nuovo-avviso-box" style="display:none; background:var(--card); padding:15px; border-radius:10px; border:2px solid var(--accent); margin-bottom:20px;">
-            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi avviso..."></textarea>
-            <button onclick="pubblicaNuovo()" style="background:var(--success); color:white; width:100%;">PUBBLICA</button>
         </div>
 
         <div id="area-bacheca"></div>
@@ -73,12 +58,11 @@
 
     <div id="modal-evento" class="modal">
         <div class="modal-content">
-            <h3>⏲️ Imposta Timer Evento</h3>
-            <input type="text" id="event-name" class="input-admin" placeholder="Nome Evento (es: Prova Generale)">
-            <label>Giorno e Ora della scadenza:</label>
+            <h3>⏲️ Nuovo Evento con Timer</h3>
+            <input type="text" id="event-name" class="input-admin" placeholder="Nome dell'evento">
             <input type="datetime-local" id="event-date" class="input-admin">
-            <button onclick="salvaEvento()" style="width:100%; background:var(--success); color:white; padding:15px;">ATTIVA TIMER</button>
-            <button onclick="cancellaEvento()" style="width:100%; background:var(--danger); color:white; margin-top:10px;">DISATTIVA EVENTO</button>
+            <button onclick="salvaEvento()" style="width:100%; background:var(--success); color:white; padding:15px;">ATTIVA ORA</button>
+            <button onclick="cancellaEvento()" style="width:100%; background:var(--danger); color:white; margin-top:10px;">RIMUOVI EVENTO</button>
             <button onclick="document.getElementById('modal-evento').style.display='none'" style="width:100%; background:none; color:gray; margin-top:10px;">Chiudi</button>
         </div>
     </div>
@@ -90,65 +74,34 @@
         const firebaseConfig = { apiKey: "AIzaSyBELSJN5Kj8JfeeWPHIzkGrYzEHVHFG1_c", databaseURL: "https://teatro-oratorio-default-rtdb.europe-west1.firebasedatabase.app" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        
+
         let session = { user: null, role: null, isMaster: false };
 
-        // --- GESTIONE TIMER ---
+        // Logica Timer
         let countdownInterval;
         onValue(ref(db, 'teatro/evento'), (snap) => {
             const ev = snap.val();
             const box = document.getElementById('box-evento');
-            if (!ev || !ev.attivo) {
-                box.style.display = 'none';
-                clearInterval(countdownInterval);
-                return;
-            }
-            
+            if (!ev || !ev.attivo) { box.style.display = 'none'; return; }
             box.style.display = 'block';
             document.getElementById('titolo-evento-display').innerText = ev.nome;
-            
             clearInterval(countdownInterval);
             countdownInterval = setInterval(() => {
-                const scadenza = new Date(ev.scadenza).getTime();
-                const ora = new Date().getTime();
-                const diff = scadenza - ora;
-
-                if (diff <= 0) {
-                    document.getElementById('timer-display').innerText = "EVENTO IN CORSO!";
-                    clearInterval(countdownInterval);
-                    return;
-                }
-
-                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-                document.getElementById('timer-display').innerText = 
-                    `${d}g ${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
+                const diff = new Date(ev.scadenza).getTime() - new Date().getTime();
+                if (diff <= 0) { document.getElementById('timer-display').innerText = "IN CORSO!"; return; }
+                const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+                document.getElementById('timer-display').innerText = `${d}g ${h}h ${m}m ${s}s`;
             }, 1000);
         });
 
         window.salvaEvento = () => {
-            const nome = document.getElementById('event-name').value;
-            const data = document.getElementById('event-date').value;
-            if(!nome || !data) return alert("Inserisci nome e data!");
-            
-            set(ref(db, 'teatro/evento'), {
-                nome: nome,
-                scadenza: data,
-                attivo: true
-            });
-            document.getElementById('modal-evento').style.display = 'none';
+            const n = document.getElementById('event-name').value, d = document.getElementById('event-date').value;
+            if(n && d) { set(ref(db, 'teatro/evento'), { nome: n, scadenza: d, attivo: true }); document.getElementById('modal-evento').style.display = 'none'; }
         };
+        
+        window.cancellaEvento = () => { update(ref(db, 'teatro/evento'), { attivo: false }); document.getElementById('modal-evento').style.display = 'none'; };
 
-        window.cancellaEvento = () => {
-            update(ref(db, 'teatro/evento'), { attivo: false });
-            document.getElementById('modal-evento').style.display = 'none';
-        };
-
-        // --- RESTO DELLE FUNZIONI (Login, Pubblica, etc. rimangono invariate) ---
-        // ... (Copia le funzioni login e renderBacheca dai messaggi precedenti) ...
+        // Ricordati di includere qui le tue funzioni di login per attivare la classe "manager-active"
     </script>
 </body>
 </html>
