@@ -7,27 +7,27 @@
     <style>
         :root { --bg: #0b0e14; --card: #161b22; --border: #30363d; --accent: #ffc107; --danger: #e74c3c; --success: #238636; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
-        
         .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.2s; }
+        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
         
-        /* Visibilità dinamica dei tasti */
+        /* Visibilità */
         .btn-admin, .mgr-btns, #btn-dev-only, #btn-save-titles, #btn-evento-admin { display: none !important; }
         body.manager-active .btn-admin, body.manager-active .mgr-btns, body.manager-active #btn-evento-admin { display: flex !important; }
         body.dev-mode #btn-dev-only { display: block !important; }
         body.can-edit-titles #btn-save-titles { display: block !important; }
 
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
-        
-        /* Box Evento & Timer */
-        #box-evento { display: none; background: linear-gradient(45deg, #800000, #ff0000); padding: 20px; text-align: center; border-radius: 12px; border: 2px solid white; margin-bottom: 20px; box-shadow: 0 0 20px rgba(255,0,0,0.5); }
-        #timer-display { font-size: 2.2rem; font-weight: 900; font-family: monospace; text-shadow: 2px 2px black; }
-
         .banner-box { background: #800000; padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; outline: none; }
         .banner-box-titolo { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; }
-        .edit-active { border: 2px dashed var(--accent) !important; background: #600000; }
+        .edit-active { border: 2px dashed white !important; background: #600000; }
 
-        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        #box-evento { display: none; background: linear-gradient(45deg, #800000, #ff0000); padding: 20px; text-align: center; border-radius: 12px; border: 2px solid white; margin-bottom: 20px; }
+        #timer-display { font-size: 2rem; font-weight: 900; font-family: monospace; }
+
+        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); position: relative; }
+        .testo-avviso { font-size: 1.1rem; outline: none; padding: 5px; }
+        .commento { background: #1c2128; padding: 8px; border-radius: 5px; margin-top: 5px; font-size: 0.9rem; position: relative; }
+        
         .input-admin { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #333; background: #0d1117; color: white; box-sizing: border-box; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; }
         .modal-content { max-width: 500px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
@@ -41,7 +41,7 @@
         <button id="btn-evento-admin" onclick="document.getElementById('modal-evento').style.display='block'" style="background:#ff6600; color:white;">⏲️ Imposta Evento</button>
         <button id="btn-dev-only" onclick="apriPannelloDev()" style="background:white; color:black;">⚙️ Impostazioni Utenti</button>
         <button id="btn-save-titles" onclick="salvaTuttoBanner()" style="background:#1f6feb; color:white;">💾 Salva Titoli</button>
-        <button class="btn-admin" onclick="logout()" style="background:var(--danger); color:white;">Esci</button>
+        <button class="btn-admin" onclick="location.reload()" style="background:var(--danger); color:white;">Esci</button>
     </div>
 
     <div class="container">
@@ -53,17 +53,31 @@
             <div id="timer-display">00:00:00:00</div>
         </div>
 
-        <div id="area-bacheca"></div>
+        <div id="nuovo-avviso-box" style="display:none; background:var(--card); padding:15px; border-radius:10px; border:2px solid var(--accent); margin-bottom:20px;">
+            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi avviso..."></textarea>
+            <button onclick="pubblicaNuovo()" style="background:var(--success); color:white; width:100%;">PUBBLICA</button>
+        </div>
+
+        <div id="area-bacheca">Caricamento avvisi...</div>
+    </div>
+
+    <div id="modal-login" class="modal">
+        <div class="modal-content">
+            <h3>Accesso</h3>
+            <input type="text" id="login-user" class="input-admin" placeholder="Username">
+            <input type="password" id="login-pass" class="input-admin" placeholder="Password">
+            <button onclick="eseguiLogin()" style="width:100%; background:var(--accent); color:black;">ENTRA</button>
+            <button onclick="document.getElementById('modal-login').style.display='none'" style="width:100%; background:none; color:gray; margin-top:10px;">Annulla</button>
+        </div>
     </div>
 
     <div id="modal-evento" class="modal">
         <div class="modal-content">
-            <h3>⏲️ Nuovo Evento con Timer</h3>
-            <input type="text" id="event-name" class="input-admin" placeholder="Nome dell'evento">
+            <h3>Timer Evento</h3>
+            <input type="text" id="event-name" class="input-admin" placeholder="Nome Evento">
             <input type="datetime-local" id="event-date" class="input-admin">
-            <button onclick="salvaEvento()" style="width:100%; background:var(--success); color:white; padding:15px;">ATTIVA ORA</button>
-            <button onclick="cancellaEvento()" style="width:100%; background:var(--danger); color:white; margin-top:10px;">RIMUOVI EVENTO</button>
-            <button onclick="document.getElementById('modal-evento').style.display='none'" style="width:100%; background:none; color:gray; margin-top:10px;">Chiudi</button>
+            <button onclick="salvaEvento()" style="width:100%; background:var(--success); color:white;">ATTIVA</button>
+            <button onclick="cancellaEvento()" style="width:100%; background:var(--danger); color:white; margin-top:10px;">DISATTIVA</button>
         </div>
     </div>
 
@@ -75,33 +89,79 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let session = { user: null, role: null, isMaster: false };
+        let session = { user: null, isMaster: false };
 
-        // Logica Timer
-        let countdownInterval;
-        onValue(ref(db, 'teatro/evento'), (snap) => {
-            const ev = snap.val();
+        // 1. CARICAMENTO AVVISI
+        onValue(ref(db, 'teatro/'), (snap) => {
+            const d = snap.val() || {};
+            document.getElementById('banner-titolo').innerText = d.titolo_principale || "GRUPPO ORATORIO";
+            document.getElementById('banner-desc').innerText = d.descrizione_banner || "Comunicazioni Ufficiali";
+            
+            const container = document.getElementById('area-bacheca');
+            container.innerHTML = "";
+            const avvisi = d.bacheca_dati || {};
+            Object.keys(avvisi).reverse().forEach(id => {
+                const a = avvisi[id];
+                container.innerHTML += `
+                    <div class="avviso-card">
+                        <div id="txt-${id}" class="testo-avviso" contenteditable="${!!session.user}">${a.testo}</div>
+                        <small style="color:gray;">${a.data} - ${a.autore}</small>
+                        <div class="mgr-btns">
+                            <button onclick="salvaModifica('${id}')" style="background:blue; color:white; font-size:10px;">Salva</button>
+                            <button onclick="eliminaAvviso('${id}')" style="background:red; color:white; font-size:10px;">X</button>
+                        </div>
+                    </div>`;
+            });
+        });
+
+        // 2. LOGIN
+        window.apriLogin = () => document.getElementById('modal-login').style.display='block';
+        window.eseguiLogin = () => {
+            const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
+            if(u === "manuel.manera" && p === "PeppinoBomber") {
+                session = { user: u, isMaster: true };
+                document.body.classList.add('manager-active', 'dev-mode', 'can-edit-titles');
+                document.getElementById('modal-login').style.display='none';
+                document.getElementById('btn-login-main').style.display='none';
+                document.querySelectorAll('.banner-box').forEach(b => { b.contentEditable = true; b.classList.add('edit-active'); });
+            } else { alert("Dati errati"); }
+        };
+
+        // 3. OPERAZIONI
+        window.pubblicaNuovo = () => {
+            const t = document.getElementById('testo-nuovo').value;
+            if(!t) return;
+            push(ref(db, 'teatro/bacheca_dati'), { testo: t, autore: session.user, data: new Date().toLocaleDateString('it-IT') });
+            document.getElementById('testo-nuovo').value = "";
+            document.getElementById('nuovo-avviso-box').style.display = 'none';
+        };
+
+        window.salvaModifica = (id) => update(ref(db, `teatro/bacheca_dati/${id}`), { testo: document.getElementById(`txt-${id}`).innerText });
+        window.eliminaAvviso = (id) => remove(ref(db, `teatro/bacheca_dati/${id}`));
+        window.salvaTuttoBanner = () => update(ref(db, 'teatro/'), {
+            titolo_principale: document.getElementById('banner-titolo').innerText,
+            descrizione_banner: document.getElementById('banner-desc').innerText
+        }).then(() => alert("Titoli salvati!"));
+
+        // 4. TIMER
+        let countdown;
+        onValue(ref(db, 'teatro/evento'), (s) => {
+            const ev = s.val();
             const box = document.getElementById('box-evento');
-            if (!ev || !ev.attivo) { box.style.display = 'none'; return; }
+            if(!ev || !ev.attivo) { box.style.display = 'none'; return; }
             box.style.display = 'block';
             document.getElementById('titolo-evento-display').innerText = ev.nome;
-            clearInterval(countdownInterval);
-            countdownInterval = setInterval(() => {
-                const diff = new Date(ev.scadenza).getTime() - new Date().getTime();
-                if (diff <= 0) { document.getElementById('timer-display').innerText = "IN CORSO!"; return; }
-                const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+            clearInterval(countdown);
+            countdown = setInterval(() => {
+                const diff = new Date(ev.scadenza).getTime() - Date.now();
+                if(diff <= 0) { document.getElementById('timer-display').innerText = "IN CORSO!"; return; }
+                const d=Math.floor(diff/86400000), h=Math.floor((diff%86400000)/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
                 document.getElementById('timer-display').innerText = `${d}g ${h}h ${m}m ${s}s`;
             }, 1000);
         });
 
-        window.salvaEvento = () => {
-            const n = document.getElementById('event-name').value, d = document.getElementById('event-date').value;
-            if(n && d) { set(ref(db, 'teatro/evento'), { nome: n, scadenza: d, attivo: true }); document.getElementById('modal-evento').style.display = 'none'; }
-        };
-        
-        window.cancellaEvento = () => { update(ref(db, 'teatro/evento'), { attivo: false }); document.getElementById('modal-evento').style.display = 'none'; };
-
-        // Ricordati di includere qui le tue funzioni di login per attivare la classe "manager-active"
+        window.salvaEvento = () => { set(ref(db, 'teatro/evento'), { nome: document.getElementById('event-name').value, scadenza: document.getElementById('event-date').value, attivo: true }); document.getElementById('modal-evento').style.display='none'; };
+        window.cancellaEvento = () => update(ref(db, 'teatro/evento'), { attivo: false });
     </script>
 </body>
 </html>
