@@ -7,30 +7,46 @@
     <style>
         :root { --bg: #0b0e14; --card: #161b22; --border: #30363d; --accent: #ffc107; --danger: #e74c3c; --success: #238636; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
-        .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; }
         
-        /* Visibilità */
+        .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.2s; }
+        
+        /* Visibilità dinamica */
         .btn-admin, .mgr-btns, #btn-dev-only, #btn-save-titles, #btn-evento-admin { display: none !important; }
         body.manager-active .btn-admin, body.manager-active .mgr-btns, body.manager-active #btn-evento-admin { display: flex !important; }
         body.dev-mode #btn-dev-only { display: block !important; }
         body.can-edit-titles #btn-save-titles { display: block !important; }
 
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
+        
+        /* Grafica Originale Rossa */
         .banner-box { background: #800000; padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; outline: none; }
-        .banner-box-titolo { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; }
-        .edit-active { border: 2px dashed white !important; background: #600000; }
+        .banner-box-titolo { font-size: 2.2rem !important; font-weight: 900 !important; text-transform: uppercase; }
+        .edit-active { border: 2px dashed #ffc107 !important; background: #600000; cursor: text; }
 
-        #box-evento { display: none; background: linear-gradient(45deg, #800000, #ff0000); padding: 20px; text-align: center; border-radius: 12px; border: 2px solid white; margin-bottom: 20px; }
-        #timer-display { font-size: 2rem; font-weight: 900; font-family: monospace; }
+        /* Box Evento & Timer */
+        #box-evento { display: none; background: linear-gradient(45deg, #800000, #ff0000); padding: 20px; text-align: center; border-radius: 12px; border: 2px solid white; margin-bottom: 20px; box-shadow: 0 0 20px rgba(255,0,0,0.5); }
+        #timer-display { font-size: 2.2rem; font-weight: 900; font-family: monospace; text-shadow: 2px 2px black; }
 
-        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); position: relative; }
-        .testo-avviso { font-size: 1.1rem; outline: none; padding: 5px; }
-        .commento { background: #1c2128; padding: 8px; border-radius: 5px; margin-top: 5px; font-size: 0.9rem; position: relative; }
+        /* Card Avviso */
+        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; position: relative; border: 1px solid var(--border); }
+        .is-pinned { border: 2px solid var(--accent) !important; background: #1a1a1a !important; }
+        .testo-avviso { font-size: 1.1rem; line-height: 1.4; outline: none; padding: 5px; border-radius: 4px; }
+        .testo-editable:focus { background: #1c2128; border: 1px dashed var(--accent); }
+
+        .badge-stato { padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; display: inline-block; }
+        .stato-APERTO { background: var(--success); }
+        .stato-CHIUSO { background: var(--danger); }
+        .stato-INFO { background: #1f6feb; }
+        
+        /* Commenti */
+        .comment-section { margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; }
+        .commento { background: #1c2128; padding: 8px; border-radius: 5px; margin-bottom: 5px; font-size: 0.9rem; position: relative; }
         
         .input-admin { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #333; background: #0d1117; color: white; box-sizing: border-box; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
         .modal-content { max-width: 500px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
+        .user-item { display: flex; justify-content: space-between; padding: 10px; background: #0d1117; margin-bottom: 5px; border-radius: 5px; align-items: center; }
     </style>
 </head>
 <body>
@@ -41,7 +57,7 @@
         <button id="btn-evento-admin" onclick="document.getElementById('modal-evento').style.display='block'" style="background:#ff6600; color:white;">⏲️ Imposta Evento</button>
         <button id="btn-dev-only" onclick="apriPannelloDev()" style="background:white; color:black;">⚙️ Impostazioni Utenti</button>
         <button id="btn-save-titles" onclick="salvaTuttoBanner()" style="background:#1f6feb; color:white;">💾 Salva Titoli</button>
-        <button class="btn-admin" onclick="location.reload()" style="background:var(--danger); color:white;">Esci</button>
+        <button class="btn-admin" onclick="logout()" style="background:var(--danger); color:white;">Esci</button>
     </div>
 
     <div class="container">
@@ -54,30 +70,59 @@
         </div>
 
         <div id="nuovo-avviso-box" style="display:none; background:var(--card); padding:15px; border-radius:10px; border:2px solid var(--accent); margin-bottom:20px;">
+            <select id="new-tag" class="input-admin">
+                <option value="INFO">ℹ️ INFO</option>
+                <option value="APERTO">🟢 APERTO</option>
+                <option value="CHIUSO">🔴 CHIUSO</option>
+            </select>
             <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi avviso..."></textarea>
             <button onclick="pubblicaNuovo()" style="background:var(--success); color:white; width:100%;">PUBBLICA</button>
         </div>
 
-        <div id="area-bacheca">Caricamento avvisi...</div>
+        <div id="area-bacheca"></div>
     </div>
 
     <div id="modal-login" class="modal">
         <div class="modal-content">
-            <h3>Accesso</h3>
+            <h3 style="text-align:center;">Area Riservata</h3>
             <input type="text" id="login-user" class="input-admin" placeholder="Username">
             <input type="password" id="login-pass" class="input-admin" placeholder="Password">
-            <button onclick="eseguiLogin()" style="width:100%; background:var(--accent); color:black;">ENTRA</button>
-            <button onclick="document.getElementById('modal-login').style.display='none'" style="width:100%; background:none; color:gray; margin-top:10px;">Annulla</button>
+            <button onclick="eseguiLogin()" style="width:100%; background:var(--accent); color:black; font-weight:bold;">ENTRA</button>
+            <button onclick="chiudiLogin()" style="width:100%; background:none; color:gray; margin-top:10px;">Annulla</button>
         </div>
     </div>
 
     <div id="modal-evento" class="modal">
         <div class="modal-content">
-            <h3>Timer Evento</h3>
-            <input type="text" id="event-name" class="input-admin" placeholder="Nome Evento">
+            <h3>⏲️ Nuovo Evento con Timer</h3>
+            <input type="text" id="event-name" class="input-admin" placeholder="Nome dell'evento">
+            <label>Giorno e ora di scadenza:</label>
             <input type="datetime-local" id="event-date" class="input-admin">
-            <button onclick="salvaEvento()" style="width:100%; background:var(--success); color:white;">ATTIVA</button>
-            <button onclick="cancellaEvento()" style="width:100%; background:var(--danger); color:white; margin-top:10px;">DISATTIVA</button>
+            <button onclick="salvaEvento()" style="width:100%; background:var(--success); color:white; padding:15px;">ATTIVA TIMER</button>
+            <button onclick="cancellaEvento()" style="width:100%; background:var(--danger); color:white; margin-top:10px;">RIMUOVI EVENTO</button>
+            <button onclick="document.getElementById('modal-evento').style.display='none'" style="width:100%; background:none; color:gray; margin-top:10px;">Chiudi</button>
+        </div>
+    </div>
+
+    <div id="modal-dev" class="modal">
+        <div class="modal-content">
+            <h3 style="color:var(--accent);">👥 Gestione Utenze</h3>
+            <div id="lista-utenti-db" style="max-height:150px; overflow-y:auto; margin-bottom:15px;"></div>
+            
+            <div style="background:#1c2128; padding:10px; border-radius:8px; margin-bottom:20px;">
+                <input type="text" id="new-user-name" class="input-admin" placeholder="Nuovo Username">
+                <input type="text" id="new-user-pass" class="input-admin" placeholder="Nuova Password">
+                <select id="new-user-role" class="input-admin">
+                    <option value="Editor">Editor (Solo propri post)</option>
+                    <option value="Admin">Admin (Tutto + Titoli)</option>
+                </select>
+                <button onclick="aggiungiUtente()" style="width:100%; background:var(--success); color:white;">AGGIUNGI UTENTE</button>
+            </div>
+
+            <h3 style="color:var(--accent);">📜 Registro Attività (Log)</h3>
+            <div id="lista-log" style="max-height:200px; overflow-y:auto; font-size:0.75rem; background:black; padding:10px; border-radius:5px; color:#aaa; line-height:1.4;"></div>
+            
+            <button onclick="document.getElementById('modal-dev').style.display='none'" style="width:100%; margin-top:20px; background:gray; color:white;">Chiudi</button>
         </div>
     </div>
 
@@ -88,81 +133,188 @@
         const firebaseConfig = { apiKey: "AIzaSyBELSJN5Kj8JfeeWPHIzkGrYzEHVHFG1_c", databaseURL: "https://teatro-oratorio-default-rtdb.europe-west1.firebasedatabase.app" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        
+        let session = { user: null, role: null, isMaster: false };
+        const MASTER_USER = "manuel.manera", MASTER_PASS = "PeppinoBomber";
 
-        let session = { user: null, isMaster: false };
-
-        // 1. CARICAMENTO AVVISI
+        // Caricamento Banner
         onValue(ref(db, 'teatro/'), (snap) => {
             const d = snap.val() || {};
             document.getElementById('banner-titolo').innerText = d.titolo_principale || "GRUPPO ORATORIO";
             document.getElementById('banner-desc').innerText = d.descrizione_banner || "Comunicazioni Ufficiali";
-            
-            const container = document.getElementById('area-bacheca');
-            container.innerHTML = "";
-            const avvisi = d.bacheca_dati || {};
-            Object.keys(avvisi).reverse().forEach(id => {
-                const a = avvisi[id];
-                container.innerHTML += `
-                    <div class="avviso-card">
-                        <div id="txt-${id}" class="testo-avviso" contenteditable="${!!session.user}">${a.testo}</div>
-                        <small style="color:gray;">${a.data} - ${a.autore}</small>
-                        <div class="mgr-btns">
-                            <button onclick="salvaModifica('${id}')" style="background:blue; color:white; font-size:10px;">Salva</button>
-                            <button onclick="eliminaAvviso('${id}')" style="background:red; color:white; font-size:10px;">X</button>
-                        </div>
-                    </div>`;
-            });
+            renderBacheca(d.bacheca_dati || {});
         });
 
-        // 2. LOGIN
-        window.apriLogin = () => document.getElementById('modal-login').style.display='block';
-        window.eseguiLogin = () => {
-            const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
-            if(u === "manuel.manera" && p === "PeppinoBomber") {
-                session = { user: u, isMaster: true };
-                document.body.classList.add('manager-active', 'dev-mode', 'can-edit-titles');
-                document.getElementById('modal-login').style.display='none';
-                document.getElementById('btn-login-main').style.display='none';
-                document.querySelectorAll('.banner-box').forEach(b => { b.contentEditable = true; b.classList.add('edit-active'); });
-            } else { alert("Dati errati"); }
-        };
-
-        // 3. OPERAZIONI
-        window.pubblicaNuovo = () => {
-            const t = document.getElementById('testo-nuovo').value;
-            if(!t) return;
-            push(ref(db, 'teatro/bacheca_dati'), { testo: t, autore: session.user, data: new Date().toLocaleDateString('it-IT') });
-            document.getElementById('testo-nuovo').value = "";
-            document.getElementById('nuovo-avviso-box').style.display = 'none';
-        };
-
-        window.salvaModifica = (id) => update(ref(db, `teatro/bacheca_dati/${id}`), { testo: document.getElementById(`txt-${id}`).innerText });
-        window.eliminaAvviso = (id) => remove(ref(db, `teatro/bacheca_dati/${id}`));
-        window.salvaTuttoBanner = () => update(ref(db, 'teatro/'), {
-            titolo_principale: document.getElementById('banner-titolo').innerText,
-            descrizione_banner: document.getElementById('banner-desc').innerText
-        }).then(() => alert("Titoli salvati!"));
-
-        // 4. TIMER
-        let countdown;
-        onValue(ref(db, 'teatro/evento'), (s) => {
-            const ev = s.val();
+        // GESTIONE TIMER
+        let countdownInterval;
+        onValue(ref(db, 'teatro/evento'), (snap) => {
+            const ev = snap.val();
             const box = document.getElementById('box-evento');
-            if(!ev || !ev.attivo) { box.style.display = 'none'; return; }
+            if (!ev || !ev.attivo) {
+                box.style.display = 'none';
+                clearInterval(countdownInterval);
+                return;
+            }
+            
             box.style.display = 'block';
             document.getElementById('titolo-evento-display').innerText = ev.nome;
-            clearInterval(countdown);
-            countdown = setInterval(() => {
-                const diff = new Date(ev.scadenza).getTime() - Date.now();
-                if(diff <= 0) { document.getElementById('timer-display').innerText = "IN CORSO!"; return; }
-                const d=Math.floor(diff/86400000), h=Math.floor((diff%86400000)/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
-                document.getElementById('timer-display').innerText = `${d}g ${h}h ${m}m ${s}s`;
+            
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                const scadenza = new Date(ev.scadenza).getTime();
+                const ora = new Date().getTime();
+                const diff = scadenza - ora;
+
+                if (diff <= 0) {
+                    document.getElementById('timer-display').innerText = "EVENTO IN CORSO!";
+                    clearInterval(countdownInterval);
+                    return;
+                }
+
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                document.getElementById('timer-display').innerText = 
+                    `${d}g ${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
             }, 1000);
         });
 
-        window.salvaEvento = () => { set(ref(db, 'teatro/evento'), { nome: document.getElementById('event-name').value, scadenza: document.getElementById('event-date').value, attivo: true }); document.getElementById('modal-evento').style.display='none'; };
-        window.cancellaEvento = () => update(ref(db, 'teatro/evento'), { attivo: false });
+        window.salvaEvento = () => {
+            const n = document.getElementById('event-name').value, d = document.getElementById('event-date').value;
+            if(n && d) { set(ref(db, 'teatro/evento'), { nome: n, scadenza: d, attivo: true }); document.getElementById('modal-evento').style.display='none'; }
+        };
+        window.cancellaEvento = () => { update(ref(db, 'teatro/evento'), { attivo: false }); document.getElementById('modal-evento').style.display='none'; };
+
+        // RENDER BACHECA E COMMENTI
+        function renderBacheca(dati) {
+            const container = document.getElementById('area-bacheca');
+            container.innerHTML = ""; 
+            const keys = Object.keys(dati).sort((a,b) => (dati[a].pinned === dati[b].pinned) ? dati[b].timestamp - dati[a].timestamp : dati[a].pinned ? -1 : 1);
+
+            keys.forEach(id => {
+                const avv = dati[id];
+                const card = document.createElement('div');
+                card.className = `avviso-card ${avv.pinned ? 'is-pinned' : ''}`;
+                card.innerHTML = `
+                    <span class="badge-stato stato-${avv.tag || 'INFO'}">${avv.tag || 'INFO'}</span>
+                    <div id="txt-${id}" class="testo-avviso ${session.user ? 'testo-editable' : ''}" contenteditable="${!!session.user}">${avv.testo}</div>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid #333; padding-top:8px;">
+                        <small style="color:gray;">${avv.data} - ${avv.autore}</small>
+                        <div class="mgr-btns">
+                            ${session.isMaster ? `<button onclick="togglePin('${id}', ${!!avv.pinned})" style="background:none; font-size:1.1rem;">${avv.pinned ? '📍' : '📌'}</button>` : ''}
+                            <button onclick="salvaModifica('${id}')" style="background:blue; color:white; font-size:10px; margin-right:5px; border-radius:3px;">Salva</button>
+                            <button onclick="eliminaAvviso('${id}')" style="background:red; color:white; font-size:10px; border-radius:3px;">Elimina</button>
+                        </div>
+                    </div>
+                    <div class="comment-section">
+                        <div id="lista-comm-${id}"></div>
+                        <div style="display:flex; gap:5px; margin-top:8px;">
+                            <input type="text" id="in-comm-${id}" class="input-admin" style="margin:0; height:30px; font-size:0.8rem;" placeholder="Commenta...">
+                            <button onclick="aggiungiCommento('${id}')" style="background:var(--accent); color:black; padding:0 10px; border-radius:4px;">></button>
+                        </div>
+                    </div>`;
+                container.appendChild(card);
+                caricaCommenti(id);
+            });
+        }
+
+        window.aggiungiCommento = (id) => {
+            const t = document.getElementById(`in-comm-${id}`).value;
+            if(!t) return;
+            push(ref(db, `teatro/bacheca_dati/${id}/commenti`), { testo: t, utente: session.user || "Visitatore", timestamp: Date.now() });
+            document.getElementById(`in-comm-${id}`).value = "";
+        };
+
+        function caricaCommenti(id) {
+            onValue(ref(db, `teatro/bacheca_dati/${id}/commenti`), (s) => {
+                const cDiv = document.getElementById(`lista-comm-${id}`);
+                cDiv.innerHTML = "";
+                const dati = s.val() || {};
+                Object.keys(dati).forEach(cid => {
+                    cDiv.innerHTML += `<div class="commento">
+                        <b>${dati[cid].utente}:</b> ${dati[cid].testo}
+                        ${session.user ? `<button onclick="remove(ref(db,'teatro/bacheca_dati/${id}/commenti/${cid}'))" style="background:none; color:red; position:absolute; top:5px; right:5px; border:none; cursor:pointer;">x</button>` : ''}
+                    </div>`;
+                });
+            });
+        }
+
+        // LOGIN E SESSIONE
+        window.eseguiLogin = () => {
+            const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
+            if(u === MASTER_USER && p === MASTER_PASS) { attivaSessione(u, 'Admin', true); return; }
+            onValue(ref(db, 'utenti/'), (snap) => {
+                let found = false;
+                Object.values(snap.val() || {}).forEach(usr => { if(usr.nome === u && usr.pass === p) { attivaSessione(usr.nome, usr.ruolo || 'Editor', false); found = true; } });
+                if(!found) alert("Accesso negato. Riprova.");
+            }, {onlyOnce: true});
+        };
+
+        function attivaSessione(nome, ruolo, isMaster) {
+            session = { user: nome, role: ruolo, isMaster };
+            document.body.classList.add('manager-active');
+            if(isMaster) document.body.classList.add('dev-mode');
+            if(isMaster || ruolo === 'Admin') {
+                document.body.classList.add('can-edit-titles');
+                document.getElementById('banner-titolo').classList.add('edit-active');
+                document.getElementById('banner-titolo').contentEditable = true;
+                document.getElementById('banner-desc').classList.add('edit-active');
+                document.getElementById('banner-desc').contentEditable = true;
+            }
+            document.getElementById('modal-login').style.display = "none";
+            document.getElementById('btn-login-main').style.display = "none";
+            onValue(ref(db, 'teatro/bacheca_dati'), (s) => renderBacheca(s.val() || {}), {onlyOnce:true});
+        }
+
+        // IMPOSTAZIONI UTENTI & LOGS
+        window.apriPannelloDev = () => {
+            document.getElementById('modal-dev').style.display = 'block';
+            onValue(ref(db, 'utenti/'), (snap) => {
+                const list = document.getElementById('lista-utenti-db');
+                list.innerHTML = "";
+                const dati = snap.val() || {};
+                Object.keys(dati).forEach(id => {
+                    const u = dati[id];
+                    list.innerHTML += `<div class="user-item">
+                        <span>👤 <b>${u.nome}</b> (${u.ruolo})</span>
+                        <button onclick="rimuoviUtente('${id}')" style="background:red; color:white; padding:4px 8px;">Elimina</button>
+                    </div>`;
+                });
+            });
+            onValue(ref(db, 'logs/'), (snap) => {
+                const logDiv = document.getElementById('lista-log');
+                logDiv.innerHTML = "";
+                const logs = Object.values(snap.val() || {}).reverse();
+                logs.forEach(l => { logDiv.innerHTML += `<div>[${l.data}] <b>${l.utente}</b>: ${l.azione}</div>`; });
+            });
+        };
+
+        window.aggiungiUtente = () => {
+            const n = document.getElementById('new-user-name').value, p = document.getElementById('new-user-pass').value, r = document.getElementById('new-user-role').value;
+            if(n && p) { push(ref(db, 'utenti/'), { nome: n, pass: p, ruolo: r }); document.getElementById('new-user-name').value = ""; document.getElementById('new-user-pass').value = ""; alert("Utente creato!"); }
+        };
+        window.rimuoviUtente = (id) => { if(confirm("Eliminare l'utente?")) remove(ref(db, `utenti/${id}`)); };
+        function scriviLog(azione) { push(ref(db, 'logs/'), { utente: session.user, azione: azione, data: new Date().toLocaleString('it-IT') }); }
+
+        // ALTRE FUNZIONI
+        window.salvaTuttoBanner = () => {
+            update(ref(db, 'teatro/'), { titolo_principale: document.getElementById('banner-titolo').innerText, descrizione_banner: document.getElementById('banner-desc').innerText }).then(() => { alert("Titoli salvati!"); scriviLog("Ha modificato i titoli del banner"); });
+        };
+        window.salvaModifica = (id) => { update(ref(db, `teatro/bacheca_dati/${id}`), { testo: document.getElementById(`txt-${id}`).innerText }); scriviLog(`Ha modificato l'avviso ${id}`); alert("Modifica salvata!"); };
+        window.pubblicaNuovo = () => {
+            const t = document.getElementById('testo-nuovo').value, tag = document.getElementById('new-tag').value;
+            if(!t) return;
+            push(ref(db, 'teatro/bacheca_dati'), { testo: t, tag: tag, autore: session.user, data: new Date().toLocaleDateString('it-IT'), timestamp: Date.now(), pinned: false });
+            scriviLog(`Ha pubblicato: "${t.substring(0,20)}..."`);
+            document.getElementById('testo-nuovo').value = ""; document.getElementById('nuovo-avviso-box').style.display = 'none';
+        };
+        window.togglePin = (id, cur) => { update(ref(db, `teatro/bacheca_dati/${id}`), { pinned: !cur }); scriviLog(`${!cur ? 'Pinnato' : 'Spinnato'} avviso ${id}`); };
+        window.eliminaAvviso = (id) => { if(confirm("Eliminare?")) { remove(ref(db, `teatro/bacheca_dati/${id}`)); scriviLog(`Eliminato avviso ${id}`); } };
+        window.apriLogin = () => document.getElementById('modal-login').style.display='block';
+        window.chiudiLogin = () => document.getElementById('modal-login').style.display='none';
+        window.logout = () => location.reload();
     </script>
 </body>
 </html>
-
