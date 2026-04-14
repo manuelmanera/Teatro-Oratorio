@@ -11,25 +11,26 @@
         .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
         button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.2s; }
         
+        /* Gestione Visibilità con classi CSS */
         .btn-admin, .mgr-btns, #btn-dev-only, #btn-save-titles, #btn-evento-admin { display: none !important; }
-        body.manager-active .btn-admin, body.manager-active .mgr-btns, body.manager-active #btn-evento-admin { display: flex !important; }
-        body.dev-mode #btn-dev-only { display: block !important; }
-        body.can-edit-titles #btn-save-titles { display: block !important; }
+        body.manager-active .btn-admin, body.manager-active .mgr-btns, body.manager-active #btn-evento-admin { display: inline-block !important; }
+        body.dev-mode #btn-dev-only { display: inline-block !important; }
+        body.can-edit-titles #btn-save-titles { display: inline-block !important; }
 
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
         .banner-box { background: #800000; padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; outline: none; }
         .banner-box-titolo { font-size: 2.2rem !important; font-weight: 900 !important; text-transform: uppercase; }
 
-        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; position: relative; border: 1px solid var(--border); overflow: hidden; }
-        .testo-avviso { font-size: 1.1rem; line-height: 1.4; outline: none; margin-bottom: 10px; }
-        .img-copertina { width: 100%; max-height: 400px; object-fit: cover; border-radius: 6px; margin-bottom: 15px; border: 1px solid #333; }
-        .btn-pdf { display: inline-block; background: var(--danger); color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.9rem; margin-top: 10px; }
+        .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); position: relative; }
+        .img-copertina { width: 100%; max-height: 400px; object-fit: cover; border-radius: 6px; margin-bottom: 15px; }
+        
+        /* Stile per il visualizzatore PDF */
+        .pdf-viewer { width: 100%; height: 500px; border: 1px solid #333; border-radius: 6px; margin-top: 15px; background: white; }
         
         .input-admin { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #333; background: #0d1117; color: white; box-sizing: border-box; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
         .modal-content { max-width: 500px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
-        
-        #status-caricamento { display: none; color: var(--accent); font-weight: bold; text-align: center; margin: 10px 0; }
+        #status-upload { display: none; color: var(--accent); text-align: center; font-weight: bold; margin: 10px; }
     </style>
 </head>
 <body>
@@ -45,34 +46,47 @@
 
     <div class="container">
         <div id="banner-titolo" class="banner-box banner-box-titolo">GRUPPO ORATORIO</div>
-        <div id="banner-desc" class="banner-box" style="font-size:1.2rem;">Comunicazioni Ufficiali</div>
+        <div id="banner-desc" class="banner-box">Comunicazioni Ufficiali</div>
         
         <div id="nuovo-avviso-box" style="display:none; background:var(--card); padding:15px; border-radius:10px; border:2px solid var(--accent); margin-bottom:20px;">
-            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi avviso..."></textarea>
-            
+            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Testo dell'avviso..."></textarea>
             <div style="background:#1c2128; padding:10px; border-radius:6px; margin-bottom:10px;">
-                <label style="font-size:0.8rem; color:var(--accent);">🖼️ Copertina (Foto):</label>
+                <label style="font-size:0.8rem; color:var(--accent);">🖼️ Carica Foto:</label>
                 <input type="file" id="file-img" accept="image/*" class="input-admin">
-                
-                <label style="font-size:0.8rem; color:var(--danger);">📄 Allegato (PDF):</label>
+                <label style="font-size:0.8rem; color:var(--danger);">📄 Carica PDF:</label>
                 <input type="file" id="file-pdf" accept=".pdf" class="input-admin">
             </div>
-
-            <div id="status-caricamento">⏳ Caricamento file in corso...</div>
-            <button id="btn-pubblica" onclick="pubblicaNuovo()" style="background:var(--success); color:white; width:100%; padding:12px;">PUBBLICA AVVISO</button>
+            <div id="status-upload">⏳ Elaborazione in corso... attendi...</div>
+            <button id="btn-pubblica" onclick="pubblicaNuovo()" style="background:var(--success); color:white; width:100%; padding:12px;">PUBBLICA</button>
         </div>
 
-        <div id="area-bacheca">Caricamento in corso...</div>
+        <div id="area-bacheca">Caricamento...</div>
     </div>
 
-    <div id="modal-login" class="modal">
-        <div class="modal-content">
-            <h3>Area Riservata</h3>
-            <input type="text" id="login-user" class="input-admin" placeholder="Username">
-            <input type="password" id="login-pass" class="input-admin" placeholder="Password">
-            <button onclick="eseguiLogin()" style="width:100%; background:var(--accent);">ENTRA</button>
-        </div>
-    </div>
+    <div id="modal-login" class="modal"><div class="modal-content">
+        <h3>Accesso</h3>
+        <input type="text" id="l-user" class="input-admin" placeholder="Username">
+        <input type="password" id="l-pass" class="input-admin" placeholder="Password">
+        <button onclick="eseguiLogin()" style="width:100%; background:var(--accent);">ENTRA</button>
+        <button onclick="document.getElementById('modal-login').style.display='none'" style="background:none; color:gray; width:100%; margin-top:10px;">Chiudi</button>
+    </div></div>
+
+    <div id="modal-dev" class="modal"><div class="modal-content">
+        <h3>Gestione Utenti</h3>
+        <div id="lista-utenti-dev" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+        <input type="text" id="new-u" class="input-admin" placeholder="Nuovo Username">
+        <input type="text" id="new-p" class="input-admin" placeholder="Password">
+        <button onclick="aggiungiUtente()" style="width:100%; background:var(--success); color:white;">AGGIUNGI</button>
+        <button onclick="document.getElementById('modal-dev').style.display='none'" style="width:100%; margin-top:10px;">Chiudi</button>
+    </div></div>
+
+    <div id="modal-evento" class="modal"><div class="modal-content">
+        <h3>Imposta Timer</h3>
+        <input type="text" id="ev-nome" class="input-admin" placeholder="Nome Evento">
+        <input type="datetime-local" id="ev-data" class="input-admin">
+        <button onclick="salvaEvento()" style="width:100%; background:var(--success); color:white;">ATTIVA</button>
+        <button onclick="document.getElementById('modal-evento').style.display='none'" style="width:100%; margin-top:10px;">Chiudi</button>
+    </div></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -85,102 +99,108 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- CONFIGURAZIONE IMGBB ---
-        const IMGBB_API_KEY = "b2bd2cbba6ca0679055dc317aa5bf613"; // <--- METTI QUI LA TUA CHIAVE!
-
+        const IMGBB_API_KEY = "b2bd2cbba6ca0679055dc317aa5bf613";
         let session = { user: null };
 
-        // Conversione PDF in Base64
-        const toBase64 = file => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
+        // --- FUNZIONI LOGIN ---
+        window.apriLogin = () => document.getElementById('modal-login').style.display='block';
+        window.eseguiLogin = () => {
+            const u = document.getElementById('l-user').value;
+            const p = document.getElementById('l-pass').value;
+            if(u === "manuel.manera" && p === "PeppinoBomber") {
+                attivaSessione("admin");
+            } else {
+                onValue(ref(db, 'teatro/utenti'), (s) => {
+                    let ok = false;
+                    const users = s.val() || {};
+                    for(let id in users) { if(users[id].username === u && users[id].password === p) { attivaSessione("manager"); ok = true; break; } }
+                    if(!ok) alert("Dati errati");
+                }, {onlyOnce: true});
+            }
+        };
 
-        // Caricamento Bacheca
-        onValue(ref(db, 'teatro/bacheca_dati'), (snap) => {
-            const area = document.getElementById('area-bacheca');
-            area.innerHTML = "";
-            const dati = snap.val() || {};
-            Object.keys(dati).reverse().forEach(id => {
-                const a = dati[id];
-                area.innerHTML += `
-                    <div class="avviso-card">
-                        ${a.img ? `<img src="${a.img}" class="img-copertina">` : ''}
-                        <div class="testo-avviso">${a.testo}</div>
-                        ${a.pdf ? `<a href="${a.pdf}" download="documento.pdf" class="btn-pdf">📥 Scarica PDF</a>` : ''}
-                        <div style="font-size:0.7rem; color:gray; margin-top:10px;">${a.data} - Da: ${a.autore}</div>
-                        <div class="mgr-btns">
-                            <button onclick="eliminaAvviso('${id}')" style="background:red; color:white; font-size:0.7rem; margin-top:10px;">Elimina</button>
-                        </div>
-                    </div>`;
-            });
-        });
+        function attivaSessione(tipo) {
+            session.user = document.getElementById('l-user').value || "manuel.manera";
+            document.body.classList.add('manager-active');
+            if(tipo === "admin") {
+                document.body.classList.add('dev-mode', 'can-edit-titles');
+                document.getElementById('banner-titolo').contentEditable = "true";
+                document.getElementById('banner-desc').contentEditable = "true";
+            }
+            document.getElementById('modal-login').style.display = 'none';
+            document.getElementById('btn-login-main').style.display = 'none';
+        }
 
-        // Pubblicazione
+        // --- GESTIONE AVVISI ---
         window.pubblicaNuovo = async () => {
             const testo = document.getElementById('testo-nuovo').value;
             const fImg = document.getElementById('file-img').files[0];
             const fPdf = document.getElementById('file-pdf').files[0];
-            const status = document.getElementById('status-caricamento');
+            const status = document.getElementById('status-upload');
             const btn = document.getElementById('btn-pubblica');
 
-            if(!testo && !fImg && !fPdf) return alert("Avviso vuoto!");
-
-            btn.disabled = true;
-            status.style.display = "block";
-
-            let imgUrl = null;
-            let pdfB64 = null;
+            btn.disabled = true; status.style.display = "block";
+            let imgUrl = null, pdfB64 = null;
 
             try {
-                // 1. Carica Immagine su ImgBB
-                if (fImg) {
-                    const formData = new FormData();
-                    formData.append("image", fImg);
-                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
-                    const resData = await res.json();
-                    imgUrl = resData.data.url;
+                if(fImg) {
+                    const fd = new FormData(); fd.append("image", fImg);
+                    const r = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {method:"POST", body:fd});
+                    const j = await r.json(); imgUrl = j.data.url;
                 }
-
-                // 2. Converti PDF se presente
-                if (fPdf) pdfB64 = await toBase64(fPdf);
-
-                // 3. Salva su Firebase
+                if(fPdf) {
+                    pdfB64 = await new Promise(res => {
+                        const rd = new FileReader(); rd.onload = () => res(rd.result); rd.readAsDataURL(fPdf);
+                    });
+                }
                 push(ref(db, 'teatro/bacheca_dati'), {
-                    testo: testo,
-                    img: imgUrl,
-                    pdf: pdfB64,
-                    autore: session.user || "Admin",
-                    data: new Date().toLocaleDateString('it-IT')
+                    testo, img: imgUrl, pdf: pdfB64,
+                    autore: session.user, data: new Date().toLocaleDateString('it-IT')
                 });
-
-                // Reset
-                document.getElementById('nuovo-avviso-box').style.display = 'none';
-                document.getElementById('testo-nuovo').value = "";
-                document.getElementById('file-img').value = "";
-                document.getElementById('file-pdf').value = "";
-            } catch (e) {
-                alert("Errore nel caricamento dei file.");
-            } finally {
-                btn.disabled = false;
-                status.style.display = "none";
-            }
+                document.getElementById('nuovo-avviso-box').style.display='none';
+            } catch(e) { alert("Errore invio"); }
+            finally { btn.disabled = false; status.style.display = "none"; }
         };
 
-        // Login Manuel
-        window.eseguiLogin = () => {
-            const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
-            if(u === "manuel.manera" && p === "PeppinoBomber") {
-                session.user = u;
-                document.body.classList.add('manager-active', 'dev-mode', 'can-edit-titles');
-                document.getElementById('modal-login').style.display='none';
-                document.getElementById('btn-login-main').style.display='none';
-            } else { alert("Dati errati"); }
-        };
-        window.apriLogin = () => document.getElementById('modal-login').style.display='block';
+        onValue(ref(db, 'teatro/bacheca_dati'), (snap) => {
+            const area = document.getElementById('area-bacheca'); area.innerHTML = "";
+            const dati = snap.val() || {};
+            Object.keys(dati).reverse().forEach(id => {
+                const a = dati[id];
+                area.innerHTML += `<div class="avviso-card">
+                    ${a.img ? `<img src="${a.img}" class="img-copertina">` : ''}
+                    <div style="white-space:pre-wrap;">${a.testo}</div>
+                    ${a.pdf ? `<iframe src="${a.pdf}" class="pdf-viewer"></iframe>` : ''}
+                    <div style="font-size:0.7rem; color:gray; margin-top:10px;">${a.data} - ${a.autore}</div>
+                    <div class="mgr-btns"><button onclick="eliminaAvviso('${id}')" style="background:red; color:white; margin-top:10px;">Elimina</button></div>
+                </div>`;
+            });
+        });
+
+        // --- ALTRE FUNZIONI ---
         window.eliminaAvviso = (id) => { if(confirm("Eliminare?")) remove(ref(db, `teatro/bacheca_dati/${id}`)); };
+        window.salvaTuttoBanner = () => {
+            update(ref(db, 'teatro/titoli'), {
+                t1: document.getElementById('banner-titolo').innerText,
+                t2: document.getElementById('banner-desc').innerText
+            });
+            alert("Salvati!");
+        };
+        window.apriPannelloDev = () => {
+            document.getElementById('modal-dev').style.display='block';
+            onValue(ref(db, 'teatro/utenti'), (s) => {
+                const l = document.getElementById('lista-utenti-dev'); l.innerHTML = "";
+                const u = s.val() || {};
+                for(let id in u) { l.innerHTML += `<div>${u[id].username} <button onclick="rimuoviUtente('${id}')" style="color:red; background:none;">X</button></div>`; }
+            });
+        };
+        window.aggiungiUtente = () => {
+            const username = document.getElementById('new-u').value;
+            const password = document.getElementById('new-p').value;
+            if(username && password) push(ref(db, 'teatro/utenti'), { username, password });
+        };
+        window.rimuoviUtente = (id) => remove(ref(db, `teatro/utenti/${id}`));
     </script>
 </body>
 </html>
+
