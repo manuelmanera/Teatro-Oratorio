@@ -22,30 +22,22 @@
         .banner-box-titolo { font-size: 2.2rem !important; font-weight: 900 !important; text-transform: uppercase; }
 
         .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); }
-        .img-copertina { width: 100%; max-height: 400px; object-fit: cover; border-radius: 6px; margin-bottom: 15px; }
-        .pdf-viewer { width: 100%; height: 500px; border: 1px solid #333; border-radius: 6px; margin-top: 15px; background: white; }
-        
         .input-admin { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #333; background: #0d1117; color: white; box-sizing: border-box; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
         .modal-content { max-width: 550px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
         
-        /* Nuova tabella utenti più leggibile */
         .user-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .user-row { background: #0d1117; border-bottom: 1px solid #333; }
         .user-row td { padding: 8px; }
         .user-row input { background: #161b22; border: 1px solid #444; color: white; padding: 5px; border-radius: 4px; width: 90%; font-size: 0.8rem; }
-        
-        #status-upload { display: none; color: var(--accent); text-align: center; font-weight: bold; padding: 10px; }
     </style>
 </head>
 <body>
 
     <div class="admin-panel">
         <button id="btn-login-main" onclick="apriLogin()">🔐 Accedi</button>
-        <button class="btn-admin" onclick="document.getElementById('nuovo-avviso-box').style.display='block'">+ Nuovo Avviso</button>
-        <button id="btn-evento-admin" onclick="document.getElementById('modal-evento').style.display='block'" style="background:#ff6600; color:white;">⏲️ Timer</button>
+        <button class="btn-admin" onclick="document.getElementById('modal-nuovo-avviso').style.display='block'">+ Nuovo Avviso</button>
         <button id="btn-dev-only" onclick="apriPannelloDev()" style="background:white; color:black;">⚙️ Gestione Utenti</button>
-        <button id="btn-save-titles" onclick="salvaTuttoBanner()" style="background:#1f6feb; color:white;">💾 Salva Titoli</button>
         <button class="btn-admin" onclick="location.reload()" style="background:var(--danger); color:white;">Esci</button>
     </div>
 
@@ -55,26 +47,27 @@
         <div id="area-bacheca">Caricamento messaggi...</div>
     </div>
 
+    <div id="modal-login" class="modal">
+        <div class="modal-content">
+            <h3>🔐 Accesso Gestionale</h3>
+            <input type="text" id="l-user" class="input-admin" placeholder="Username">
+            <input type="password" id="l-pass" class="input-admin" placeholder="Password">
+            <button onclick="eseguiLogin()" style="width:100%; background:var(--accent); color:black;">ENTRA</button>
+            <button onclick="document.getElementById('modal-login').style.display='none'" style="width:100%; margin-top:10px; background:transparent; color:gray;">Annulla</button>
+        </div>
+    </div>
+
     <div id="modal-dev" class="modal"><div class="modal-content">
         <h3 style="color:var(--accent)">👥 Elenco Account</h3>
-        <table class="user-table" id="tabella-utenti">
-            <thead>
-                <tr style="font-size: 0.7rem; color: gray; text-align: left;">
-                    <th>Username</th>
-                    <th>Password</th>
-                    <th>Azioni</th>
-                </tr>
-            </thead>
-            <tbody id="body-utenti">
-                </tbody>
+        <table class="user-table">
+            <thead><tr style="font-size: 0.7rem; color: gray; text-align: left;"><th>User</th><th>Pass</th><th>Azioni</th></tr></thead>
+            <tbody id="body-utenti"></tbody>
         </table>
-        
-        <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
-        
-        <h4>➕ Crea Nuovo Utente</h4>
-        <input type="text" id="new-u" class="input-admin" placeholder="Inserisci Username">
-        <input type="text" id="new-p" class="input-admin" placeholder="Inserisci Password">
-        <button onclick="aggiungiUtente()" style="width:100%; background:var(--success); color:white; padding: 10px;">AGGIUNGI ORA</button>
+        <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
+        <h4>➕ Nuovo Utente</h4>
+        <input type="text" id="new-u" class="input-admin" placeholder="Username">
+        <input type="text" id="new-p" class="input-admin" placeholder="Password">
+        <button onclick="aggiungiUtente()" style="width:100%; background:var(--success); color:white;">AGGIUNGI</button>
         <button onclick="document.getElementById('modal-dev').style.display='none'" style="width:100%; margin-top:10px; background: transparent; color: gray;">Chiudi</button>
     </div></div>
 
@@ -88,96 +81,87 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        
+        let session = { user: null };
 
-        // --- FUNZIONE VISUALIZZAZIONE UTENTI ---
-        window.apriPannelloDev = () => {
-            document.getElementById('modal-dev').style.display='block';
-            const tbody = document.getElementById('body-utenti');
+        // --- CARICAMENTO BACHECA ---
+        onValue(ref(db, 'teatro/bacheca'), (snapshot) => {
+            const area = document.getElementById('area-bacheca');
+            area.innerHTML = "";
+            const dati = snapshot.val();
+            if(!dati) { area.innerHTML = "Nessun avviso presente."; return; }
             
-            // Ascolta i cambiamenti in tempo reale
-            onValue(ref(db, 'teatro/utenti'), (snapshot) => {
-                tbody.innerHTML = ""; // Pulisce la tabella
-                const utenti = snapshot.val();
-                
-                if(!utenti) {
-                    tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px;'>Nessun utente creato.</td></tr>";
-                    return;
-                }
-
-                for(let id in utenti) {
-                    const tr = document.createElement('tr');
-                    tr.className = "user-row";
-                    tr.innerHTML = `
-                        <td><input type="text" value="${utenti[id].username}" id="u-${id}"></td>
-                        <td><input type="text" value="${utenti[id].password}" id="p-${id}"></td>
-                        <td style="display:flex; gap:5px;">
-                            <button onclick="aggiornaUtente('${id}')" style="background:var(--success); color:white; padding:5px;">💾</button>
-                            <button onclick="rimuoviUtente('${id}')" style="background:var(--danger); color:white; padding:5px;">🗑️</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                }
+            Object.keys(dati).reverse().forEach(id => {
+                const avviso = dati[id];
+                const card = document.createElement('div');
+                card.className = "avviso-card";
+                card.innerHTML = `<h3>${avviso.titolo}</h3><p>${avviso.testo}</p>`;
+                area.appendChild(card);
             });
-        };
+        });
 
-        window.aggiornaUtente = (id) => {
-            const username = document.getElementById(`u-${id}`).value;
-            const password = document.getElementById(`p-${id}`).value;
-            if(!username || !password) return alert("Campi vuoti!");
-            
-            update(ref(db, `teatro/utenti/${id}`), { username, password })
-                .then(() => alert("Dati aggiornati correttamente!"));
-        };
-
-        window.rimuoviUtente = (id) => {
-            if(confirm("Sei sicuro di voler eliminare questo utente?")) {
-                remove(ref(db, `teatro/utenti/${id}`));
-            }
-        };
-
-        window.aggiungiUtente = () => {
-            const username = document.getElementById('new-u').value;
-            const password = document.getElementById('new-p').value;
-            if(username && password) {
-                push(ref(db, 'teatro/utenti'), { username, password })
-                    .then(() => {
-                        document.getElementById('new-u').value = "";
-                        document.getElementById('new-p').value = "";
-                    });
-            } else {
-                alert("Riempi entrambi i campi");
-            }
-        };
-
-        // --- LOGIN E RESTO DELLE FUNZIONI (TIMER, AVVISI) ---
-        // (Mantieni le funzioni eseguiLogin, attivaSessione e pubblicaNuovo dell'ultimo messaggio)
-        // ...
+        // --- FUNZIONI GLOBALI ---
         window.apriLogin = () => document.getElementById('modal-login').style.display='block';
+
         window.eseguiLogin = () => {
             const u = document.getElementById('l-user').value;
             const p = document.getElementById('l-pass').value;
-            if(u === "manuel.manera" && p === "PeppinoBomber") { attivaSessione("admin"); } 
-            else {
+            
+            if(u === "manuel.manera" && p === "PeppinoBomber") { 
+                attivaSessione("admin"); 
+            } else {
                 onValue(ref(db, 'teatro/utenti'), (s) => {
                     let ok = false;
                     const users = s.val() || {};
-                    for(let id in users) { if(users[id].username === u && users[id].password === p) { attivaSessione("manager"); ok = true; break; } }
+                    for(let id in users) { 
+                        if(users[id].username === u && users[id].password === p) { 
+                            attivaSessione("manager"); ok = true; break; 
+                        } 
+                    }
                     if(!ok) alert("Credenziali errate!");
                 }, {onlyOnce: true});
             }
         };
 
         function attivaSessione(tipo) {
-            session.user = document.getElementById('l-user').value || "manuel.manera";
+            session.user = document.getElementById('l-user').value || "Admin";
             document.body.classList.add('manager-active');
-            if(tipo === "admin") {
-                document.body.classList.add('dev-mode', 'can-edit-titles');
-            }
+            if(tipo === "admin") document.body.classList.add('dev-mode', 'can-edit-titles');
             document.getElementById('modal-login').style.display = 'none';
             document.getElementById('btn-login-main').style.display = 'none';
+            alert("Benvenuto " + session.user);
         }
-        
-        // (Il resto della logica per bacheca e titoli rimane invariata)
+
+        window.apriPannelloDev = () => {
+            document.getElementById('modal-dev').style.display='block';
+            onValue(ref(db, 'teatro/utenti'), (snapshot) => {
+                const tbody = document.getElementById('body-utenti');
+                tbody.innerHTML = "";
+                const utenti = snapshot.val();
+                for(let id in utenti) {
+                    const tr = document.createElement('tr');
+                    tr.className = "user-row";
+                    tr.innerHTML = `
+                        <td><input type="text" value="${utenti[id].username}" id="u-${id}"></td>
+                        <td><input type="text" value="${utenti[id].password}" id="p-${id}"></td>
+                        <td><button onclick="rimuoviUtente('${id}')">🗑️</button></td>`;
+                    tbody.appendChild(tr);
+                }
+            });
+        };
+
+        window.aggiungiUtente = () => {
+            const username = document.getElementById('new-u').value;
+            const password = document.getElementById('new-p').value;
+            if(username && password) {
+                push(ref(db, 'teatro/utenti'), { username, password });
+                document.getElementById('new-u').value = ""; document.getElementById('new-p').value = "";
+            }
+        };
+
+        window.rimuoviUtente = (id) => {
+            if(confirm("Eliminare l'utente?")) remove(ref(db, `teatro/utenti/${id}`));
+        };
     </script>
 </body>
 </html>
