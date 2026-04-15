@@ -9,9 +9,8 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: white; }
         
         .admin-panel { background: var(--accent); padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; color: black; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        button { padding: 8px 15px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; transition: 0.2s; }
+        button { padding: 10px 15px; cursor: pointer; border-radius: 8px; border: none; font-weight: bold; transition: 0.2s; }
         
-        /* Visibilità dinamica */
         .btn-admin, .mgr-btns, #btn-dev-only, #btn-save-titles, #btn-evento-admin { display: none !important; }
         body.manager-active .btn-admin, body.manager-active .mgr-btns, body.manager-active #btn-evento-admin { display: inline-block !important; }
         body.dev-mode #btn-dev-only { display: inline-block !important; }
@@ -19,22 +18,18 @@
 
         .container { max-width: 700px; margin: 20px auto; padding: 0 15px; }
         .banner-box { background: #800000; padding: 20px; text-align: center; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; outline: none; }
-        .banner-box-titolo { font-size: 2.2rem !important; font-weight: 900 !important; text-transform: uppercase; }
-
-        /* Stile Timer */
+        
         #timer-display { background: #1c2128; border: 2px solid var(--accent); border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 20px; display: none; }
-        #timer-countdown { font-size: 1.5rem; font-weight: bold; color: var(--accent); margin-top: 5px; }
+        #timer-countdown { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
 
         .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); }
-        .img-copertina { width: 100%; max-height: 400px; object-fit: cover; border-radius: 6px; margin-bottom: 15px; }
-        .pdf-viewer { width: 100%; height: 500px; border: 1px solid #333; border-radius: 6px; margin-top: 15px; background: white; }
+        .input-admin { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; background: #0d1117; color: white; box-sizing: border-box; }
         
-        .input-admin { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #333; background: #0d1117; color: white; box-sizing: border-box; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
-        .modal-content { max-width: 550px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
+        .modal-content { max-width: 450px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
         
-        .user-row { display: flex; align-items: center; gap: 5px; background: #0d1117; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #333; }
-        .user-row input { background: #161b22; border: 1px solid #444; color: white; padding: 5px; border-radius: 4px; width: 35%; font-size: 0.8rem; }
+        .user-row { display: flex; align-items: center; gap: 5px; background: #0d1117; padding: 8px; border-radius: 8px; margin-bottom: 5px; border: 1px solid #333; }
+        .user-row input { background: #161b22; border: 1px solid #444; color: white; padding: 5px; border-radius: 4px; width: 30%; font-size: 0.75rem; }
     </style>
 </head>
 <body>
@@ -43,53 +38,51 @@
         <button id="btn-login-main" onclick="window.apriLogin()">🔐 Accedi</button>
         <button class="btn-admin" onclick="document.getElementById('nuovo-avviso-box').style.display='block'">+ Nuovo Avviso</button>
         <button id="btn-evento-admin" onclick="document.getElementById('modal-evento').style.display='block'" style="background:#ff6600; color:white;">⏲️ Timer</button>
-        <button id="btn-dev-only" onclick="window.apriPannelloDev()">⚙️ Utenti</button>
+        <button id="btn-dev-only" onclick="window.apriPannelloDev()" style="background:white; color:black;">⚙️ Utenti</button>
         <button id="btn-save-titles" onclick="window.salvaTuttoBanner()" style="background:#1f6feb; color:white;">💾 Salva Titoli</button>
         <button class="btn-admin" onclick="location.reload()" style="background:var(--danger); color:white;">Esci</button>
     </div>
 
     <div class="container">
-        <div id="banner-titolo" class="banner-box banner-box-titolo">GRUPPO ORATORIO</div>
+        <div id="banner-titolo" class="banner-box" style="font-size:2rem; font-weight:900;">GRUPPO ORATORIO</div>
         <div id="banner-desc" class="banner-box">Comunicazioni Ufficiali</div>
 
         <div id="timer-display">
-            <div id="timer-label" style="font-size: 0.9rem; text-transform: uppercase; color: gray;">Prossimo Evento</div>
-            <div id="timer-nome" style="font-size: 1.2rem; font-weight: bold;"></div>
-            <div id="timer-countdown">00:00:00:00</div>
+            <div id="timer-nome" style="color:gray; font-size:0.8rem;"></div>
+            <div id="timer-countdown"></div>
         </div>
         
-        <div id="nuovo-avviso-box" style="display:none; background:var(--card); padding:15px; border-radius:10px; border:2px solid var(--accent); margin-bottom:20px;">
-            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi avviso..."></textarea>
-            <input type="file" id="file-img" accept="image/*" class="input-admin">
-            <input type="file" id="file-pdf" accept=".pdf" class="input-admin">
-            <button onclick="window.pubblicaNuovo()" style="background:var(--success); color:white; width:100%; padding:10px;">PUBBLICA</button>
-        </div>
-
-        <div id="area-bacheca">Caricamento in corso...</div>
+        <div id="area-bacheca">Caricamento...</div>
     </div>
 
-    <div id="modal-login" class="modal"><div class="modal-content">
-        <h3>Login</h3>
-        <input type="text" id="l-user" class="input-admin" placeholder="Username">
-        <input type="password" id="l-pass" class="input-admin" placeholder="Password">
-        <button onclick="window.eseguiLogin()" style="width:100%; background:var(--accent);">ENTRA</button>
-    </div></div>
-
     <div id="modal-dev" class="modal"><div class="modal-content">
-        <h3>👥 Gestione Utenti</h3>
-        <div id="lista-utenti-container" style="max-height:300px; overflow-y:auto; margin-bottom:15px;"></div>
-        <hr style="border:1px solid #333;">
-        <input type="text" id="new-u" class="input-admin" placeholder="User">
-        <input type="text" id="new-p" class="input-admin" placeholder="Pass">
-        <button onclick="window.aggiungiUtente()" style="width:100%; background:var(--success); color:white;">AGGIUNGI</button>
-        <button onclick="document.getElementById('modal-dev').style.display='none'" style="width:100%; margin-top:10px;">Chiudi</button>
+        <h3 style="margin-top:0;">👥 Gestione Utenti</h3>
+        
+        <input type="text" id="new-u" class="input-admin" placeholder="Nuovo Username">
+        <input type="text" id="new-p" class="input-admin" placeholder="Nuova Password">
+        <button onclick="window.aggiungiUtente()" style="width:100%; background:var(--success); color:white; margin-bottom:10px;">AGGIUNGI UTENTE</button>
+        
+        <button onclick="window.toggleListaUtenti()" style="width:100%; background:#1f6feb; color:white; margin-bottom:10px;">🔍 VISUALIZZA / NASCONDI UTENTI</button>
+        <div id="lista-utenti-container" style="display:none; max-height:200px; overflow-y:auto; margin-top:10px; border-top:1px solid #333; padding-top:10px;"></div>
+        
+        <button onclick="document.getElementById('modal-dev').style.display='none'" style="width:100%; background:#eee; color:black; margin-top:15px;">Chiudi</button>
     </div></div>
 
     <div id="modal-evento" class="modal"><div class="modal-content">
         <h3>⏲️ Imposta Timer</h3>
-        <input type="text" id="ev-nome" class="input-admin" placeholder="Nome Evento">
+        <label>Nome Evento:</label>
+        <input type="text" id="ev-nome" class="input-admin" placeholder="Es: Festa di Primavera">
+        <label>Data e Ora:</label>
         <input type="datetime-local" id="ev-data" class="input-admin">
-        <button onclick="window.salvaEvento()" style="width:100%; background:var(--success); color:white;">ATTIVA</button>
+        <button onclick="window.salvaEvento()" style="width:100%; background:var(--success); color:white; margin-bottom:10px;">ATTIVA TIMER</button>
+        <button onclick="document.getElementById('modal-evento').style.display='none'" style="width:100%; background:var(--danger); color:white;">ANNULLA E ESCI</button>
+    </div></div>
+
+    <div id="modal-login" class="modal"><div class="modal-content">
+        <h3>🔐 Login</h3>
+        <input type="text" id="l-user" class="input-admin" placeholder="Username">
+        <input type="password" id="l-pass" class="input-admin" placeholder="Password">
+        <button onclick="window.eseguiLogin()" style="width:100%; background:var(--accent); color:black;">ACCEDI</button>
     </div></div>
 
     <script type="module">
@@ -102,52 +95,33 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const IMGBB_API_KEY = "b2bd2cbba6ca0679055dc317aa5bf613";
         let session = { user: null };
 
-        // --- GESTIONE TIMER ---
-        onValue(ref(db, 'teatro/evento'), (snap) => {
-            const ev = snap.val();
-            const display = document.getElementById('timer-display');
-            if(ev && ev.data) {
-                display.style.display = "block";
-                document.getElementById('timer-nome').innerText = ev.nome;
-                
-                setInterval(() => {
-                    const fine = new Date(ev.data).getTime();
-                    const ora = new Date().getTime();
-                    const diff = fine - ora;
-                    if(diff > 0) {
-                        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-                        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        const s = Math.floor((diff % (1000 * 60)) / 1000);
-                        document.getElementById('timer-countdown').innerText = `${d}g ${h}h ${m}m ${s}s`;
-                    } else {
-                        document.getElementById('timer-countdown').innerText = "EVENTO IN CORSO";
-                    }
-                }, 1000);
-            } else {
-                display.style.display = "none";
-            }
-        });
+        // --- FUNZIONI UTENTI ---
+        window.apriPannelloDev = () => document.getElementById('modal-dev').style.display = 'block';
 
-        // --- GESTIONE UTENTI ---
-        window.apriPannelloDev = () => {
-            document.getElementById('modal-dev').style.display = 'block';
-            onValue(ref(db, 'teatro/utenti'), (snap) => {
-                const container = document.getElementById('lista-utenti-container');
-                container.innerHTML = "";
-                const u = snap.val() || {};
-                for(let id in u) {
-                    const row = document.createElement('div');
-                    row.className = "user-row";
-                    row.innerHTML = `<input type="text" value="${u[id].username}" id="u-${id}"><input type="text" value="${u[id].password}" id="p-${id}">
-                        <button onclick="window.salvaModUtente('${id}')" style="background:green;color:white;">💾</button>
-                        <button onclick="window.rimuoviUtente('${id}')" style="background:red;color:white;">🗑️</button>`;
-                    container.appendChild(row);
-                }
-            });
+        window.toggleListaUtenti = () => {
+            const cont = document.getElementById('lista-utenti-container');
+            if(cont.style.display === "none") {
+                cont.style.display = "block";
+                onValue(ref(db, 'teatro/utenti'), (snap) => {
+                    cont.innerHTML = "";
+                    const u = snap.val() || {};
+                    for(let id in u) {
+                        const div = document.createElement('div');
+                        div.className = "user-row";
+                        div.innerHTML = `
+                            <input type="text" value="${u[id].username}" id="u-${id}">
+                            <input type="text" value="${u[id].password}" id="p-${id}">
+                            <button onclick="window.salvaModUtente('${id}')" style="background:green; color:white; padding:5px;">💾</button>
+                            <button onclick="window.rimuoviUtente('${id}')" style="background:red; color:white; padding:5px;">🗑️</button>
+                        `;
+                        cont.appendChild(div);
+                    }
+                });
+            } else {
+                cont.style.display = "none";
+            }
         };
 
         window.salvaModUtente = (id) => {
@@ -156,30 +130,66 @@
             update(ref(db, `teatro/utenti/${id}`), { username, password }).then(() => alert("Salvato!"));
         };
 
-        window.rimuoviUtente = (id) => { if(confirm("Eliminare utente?")) remove(ref(db, `teatro/utenti/${id}`)); };
+        window.rimuoviUtente = (id) => { if(confirm("Eliminare?")) remove(ref(db, `teatro/utenti/${id}`)); };
+
         window.aggiungiUtente = () => {
-            const username = document.getElementById('new-u').value;
-            const password = document.getElementById('new-p').value;
-            if(username && password) push(ref(db, 'teatro/utenti'), { username, password });
+            const u = document.getElementById('new-u').value;
+            const p = document.getElementById('new-p').value;
+            if(u && p) {
+                push(ref(db, 'teatro/utenti'), { username: u, password: p });
+                document.getElementById('new-u').value = ""; document.getElementById('new-p').value = "";
+                alert("Utente aggiunto!");
+            }
         };
 
-        // --- LOGIN E TITOLI ---
+        // --- TIMER ---
+        window.salvaEvento = () => {
+            const nome = document.getElementById('ev-nome').value;
+            const data = document.getElementById('ev-data').value;
+            if(nome && data) {
+                set(ref(db, 'teatro/evento'), { nome, data }).then(() => {
+                    alert("Timer Attivato!");
+                    document.getElementById('modal-evento').style.display = 'none';
+                });
+            } else { alert("Inserisci nome e data!"); }
+        };
+
+        onValue(ref(db, 'teatro/evento'), (snap) => {
+            const ev = snap.val();
+            const disp = document.getElementById('timer-display');
+            if(ev && ev.data) {
+                disp.style.display = "block";
+                document.getElementById('timer-nome').innerText = ev.nome;
+                setInterval(() => {
+                    const diff = new Date(ev.data).getTime() - new Date().getTime();
+                    if(diff > 0) {
+                        const d = Math.floor(diff / 86400000);
+                        const h = Math.floor((diff % 86400000) / 3600000);
+                        const m = Math.floor((diff % 3600000) / 60000);
+                        const s = Math.floor((diff % 60000) / 1000);
+                        document.getElementById('timer-countdown').innerText = `${d}g ${h}h ${m}m ${s}s`;
+                    } else { document.getElementById('timer-countdown').innerText = "EVENTO IN CORSO"; }
+                }, 1000);
+            }
+        });
+
+        // --- LOGIN & AVVISI (Base) ---
         window.apriLogin = () => document.getElementById('modal-login').style.display = 'block';
         window.eseguiLogin = () => {
             const u = document.getElementById('l-user').value;
             const p = document.getElementById('l-pass').value;
-            if (u === "manuel.manera" && p === "PeppinoBomber") attivaSessione("admin");
+            if(u === "manuel.manera" && p === "PeppinoBomber") attivaSessione("admin");
             else {
                 onValue(ref(db, 'teatro/utenti'), (s) => {
                     let ok = false; const users = s.val() || {};
                     for(let id in users) { if(users[id].username === u && users[id].password === p) { attivaSessione("manager"); ok = true; break; } }
-                    if(!ok) alert("Errore");
+                    if(!ok) alert("Credenziali errate!");
                 }, {onlyOnce: true});
             }
         };
 
         function attivaSessione(tipo) {
-            session.user = document.getElementById('l-user').value || "manuel.manera";
+            session.user = document.getElementById('l-user').value || "Admin";
             document.body.classList.add('manager-active');
             if(tipo === "admin") {
                 document.body.classList.add('dev-mode', 'can-edit-titles');
@@ -190,46 +200,21 @@
             document.getElementById('btn-login-main').style.display = 'none';
         }
 
-        // --- AVVISI ---
         onValue(ref(db, 'teatro/bacheca_dati'), (snap) => {
             const area = document.getElementById('area-bacheca'); area.innerHTML = "";
             const dati = snap.val() || {};
             Object.keys(dati).reverse().forEach(id => {
                 const a = dati[id];
                 area.innerHTML += `<div class="avviso-card">
-                    ${a.img ? `<img src="${a.img}" class="img-copertina">` : ''}
                     <div>${a.testo}</div>
-                    ${a.pdf ? `<iframe src="${a.pdf}" class="pdf-viewer"></iframe>` : ''}
-                    <div class="mgr-btns"><button onclick="window.eliminaAvviso('${id}')" style="background:red;color:white;margin-top:10px;">Elimina</button></div>
+                    <div class="mgr-btns"><button onclick="window.eliminaAvviso('${id}')" style="background:red; color:white; margin-top:10px; font-size:10px;">Elimina</button></div>
                 </div>`;
             });
         });
 
         window.eliminaAvviso = (id) => remove(ref(db, `teatro/bacheca_dati/${id}`));
-        window.pubblicaNuovo = async () => {
-            const fImg = document.getElementById('file-img').files[0];
-            const fPdf = document.getElementById('file-pdf').files[0];
-            let imgUrl = null, pdfB64 = null;
-            if(fImg) {
-                const fd = new FormData(); fd.append("image", fImg);
-                const r = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {method:"POST", body:fd});
-                const j = await r.json(); imgUrl = j.data.url;
-            }
-            if(fPdf) {
-                pdfB64 = await new Promise(res => { const rd = new FileReader(); rd.onload = () => res(rd.result); rd.readAsDataURL(fPdf); });
-            }
-            push(ref(db, 'teatro/bacheca_dati'), { testo: document.getElementById('testo-nuovo').value, img: imgUrl, pdf: pdfB64, autore: session.user, data: new Date().toLocaleDateString('it-IT') });
-            document.getElementById('nuovo-avviso-box').style.display = 'none';
-        };
-
-        window.salvaEvento = () => {
-            const nome = document.getElementById('ev-nome').value;
-            const data = document.getElementById('ev-data').value;
-            set(ref(db, 'teatro/evento'), { nome, data }).then(() => alert("Ok!"));
-        };
-
         window.salvaTuttoBanner = () => {
-            update(ref(db, 'teatro/titoli'), { t1: document.getElementById('banner-titolo').innerText, t2: document.getElementById('banner-desc').innerText }).then(() => alert("Ok!"));
+            update(ref(db, 'teatro/titoli'), { t1: document.getElementById('banner-titolo').innerText, t2: document.getElementById('banner-desc').innerText }).then(() => alert("Titoli salvati!"));
         };
 
         onValue(ref(db, 'teatro/titoli'), (s) => {
@@ -238,3 +223,4 @@
     </script>
 </body>
 </html>
+
