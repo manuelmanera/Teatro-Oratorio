@@ -29,7 +29,6 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
         .modal-content { max-width: 550px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
         
-        /* Tabella Utenti */
         .user-row { display: flex; align-items: center; gap: 5px; background: #0d1117; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #333; }
         .user-row input { background: #161b22; border: 1px solid #444; color: white; padding: 5px; border-radius: 4px; width: 35%; font-size: 0.8rem; }
     </style>
@@ -39,8 +38,9 @@
     <div class="admin-panel">
         <button id="btn-login-main" onclick="window.apriLogin()">🔐 Accedi</button>
         <button class="btn-admin" onclick="document.getElementById('nuovo-avviso-box').style.display='block'">+ Nuovo Avviso</button>
-        <button id="btn-dev-only" onclick="window.apriPannelloDev()">⚙️ Gestione Utenti</button>
-        <button id="btn-save-titles" onclick="window.salvaTuttoBanner()">💾 Salva Titoli</button>
+        <button id="btn-evento-admin" onclick="document.getElementById('modal-evento').style.display='block'" style="background:#ff6600; color:white;">⏲️ Timer</button>
+        <button id="btn-dev-only" onclick="window.apriPannelloDev()">⚙️ Utenti</button>
+        <button id="btn-save-titles" onclick="window.salvaTuttoBanner()" style="background:#1f6feb; color:white;">💾 Salva Titoli</button>
         <button class="btn-admin" onclick="location.reload()" style="background:var(--danger); color:white;">Esci</button>
     </div>
 
@@ -59,22 +59,29 @@
     </div>
 
     <div id="modal-login" class="modal"><div class="modal-content">
-        <h3>Login</h3>
+        <h3>Login Gestione</h3>
         <input type="text" id="l-user" class="input-admin" placeholder="Username">
         <input type="password" id="l-pass" class="input-admin" placeholder="Password">
         <button onclick="window.eseguiLogin()" style="width:100%; background:var(--accent);">ENTRA</button>
     </div></div>
 
     <div id="modal-dev" class="modal"><div class="modal-content">
-        <h3>👥 Gestione Utenti</h3>
-        <div id="lista-utenti-container" style="max-height:300px; overflow-y:auto; margin-bottom:15px;">
-            </div>
+        <h3>👥 Lista Utenti Esistenti</h3>
+        <div id="lista-utenti-container" style="max-height:300px; overflow-y:auto; margin-bottom:15px;"></div>
         <hr style="border:1px solid #333;">
-        <h4>Crea Nuovo</h4>
-        <input type="text" id="new-u" class="input-admin" placeholder="Username">
-        <input type="text" id="new-p" class="input-admin" placeholder="Password">
-        <button onclick="window.aggiungiUtente()" style="width:100%; background:var(--success); color:white;">AGGIUNGI</button>
+        <h4>Crea Nuovo Account</h4>
+        <input type="text" id="new-u" class="input-admin" placeholder="Nuovo Username">
+        <input type="text" id="new-p" class="input-admin" placeholder="Nuova Password">
+        <button onclick="window.aggiungiUtente()" style="width:100%; background:var(--success); color:white;">CREA</button>
         <button onclick="document.getElementById('modal-dev').style.display='none'" style="width:100%; margin-top:10px;">Chiudi</button>
+    </div></div>
+
+    <div id="modal-evento" class="modal"><div class="modal-content">
+        <h3>⏲️ Imposta Timer Evento</h3>
+        <input type="text" id="ev-nome" class="input-admin" placeholder="Nome Evento">
+        <input type="datetime-local" id="ev-data" class="input-admin">
+        <button onclick="window.salvaEvento()" style="width:100%; background:var(--success); color:white;">SALVA TIMER</button>
+        <button onclick="document.getElementById('modal-evento').style.display='none'" style="width:100%; margin-top:10px;">Chiudi</button>
     </div></div>
 
     <script type="module">
@@ -91,7 +98,15 @@
         const IMGBB_API_KEY = "b2bd2cbba6ca0679055dc317aa5bf613";
         let session = { user: null };
 
-        // --- SISTEMA UTENTI (GLOBALE) ---
+        // --- CARICAMENTO TITOLI ---
+        onValue(ref(db, 'teatro/titoli'), (s) => {
+            const t = s.val(); if(t) { 
+                document.getElementById('banner-titolo').innerText = t.t1;
+                document.getElementById('banner-desc').innerText = t.t2;
+            }
+        });
+
+        // --- GESTIONE UTENTI (ELENCO E MODIFICA) ---
         window.apriPannelloDev = () => {
             document.getElementById('modal-dev').style.display = 'block';
             onValue(ref(db, 'teatro/utenti'), (snap) => {
@@ -115,23 +130,18 @@
         window.salvaModificaUtente = (id) => {
             const u = document.getElementById(`edit-u-${id}`).value;
             const p = document.getElementById(`edit-p-${id}`).value;
-            update(ref(db, `teatro/utenti/${id}`), { username: u, password: p }).then(() => alert("Modificato!"));
+            update(ref(db, `teatro/utenti/${id}`), { username: u, password: p }).then(() => alert("Salvato!"));
         };
 
-        window.eliminaUtente = (id) => {
-            if (confirm("Eliminare l'utente?")) remove(ref(db, `teatro/utenti/${id}`));
-        };
+        window.eliminaUtente = (id) => { if (confirm("Eliminare utente?")) remove(ref(db, `teatro/utenti/${id}`)); };
 
         window.aggiungiUtente = () => {
             const u = document.getElementById('new-u').value;
             const p = document.getElementById('new-p').value;
-            if (u && p) {
-                push(ref(db, 'teatro/utenti'), { username: u, password: p });
-                document.getElementById('new-u').value = ""; document.getElementById('new-p').value = "";
-            }
+            if (u && p) push(ref(db, 'teatro/utenti'), { username: u, password: p });
         };
 
-        // --- LOGIN & SESSIONE ---
+        // --- LOGIN ---
         window.apriLogin = () => document.getElementById('modal-login').style.display = 'block';
         window.eseguiLogin = () => {
             const u = document.getElementById('l-user').value;
@@ -150,12 +160,23 @@
         function attivaSessione(tipo) {
             session.user = document.getElementById('l-user').value || "manuel.manera";
             document.body.classList.add('manager-active');
-            if (tipo === "admin") document.body.classList.add('dev-mode', 'can-edit-titles');
+            if (tipo === "admin") {
+                document.body.classList.add('dev-mode', 'can-edit-titles');
+                document.getElementById('banner-titolo').contentEditable = "true";
+                document.getElementById('banner-desc').contentEditable = "true";
+            }
             document.getElementById('modal-login').style.display = 'none';
             document.getElementById('btn-login-main').style.display = 'none';
         }
 
-        // --- CARICAMENTO AVVISI ---
+        // --- TIMER ---
+        window.salvaEvento = () => {
+            const nome = document.getElementById('ev-nome').value;
+            const data = document.getElementById('ev-data').value;
+            if (nome && data) set(ref(db, 'teatro/evento'), { nome, data }).then(() => alert("Timer impostato!"));
+        };
+
+        // --- AVVISI ---
         onValue(ref(db, 'teatro/bacheca_dati'), (snap) => {
             const area = document.getElementById('area-bacheca'); area.innerHTML = "";
             const dati = snap.val() || {};
