@@ -23,8 +23,11 @@
         #timer-countdown { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
 
         .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .allegato-img { max-width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid #333; }
+        .btn-pdf { display: inline-block; background: #e74c3c; color: white; padding: 10px; border-radius: 5px; text-decoration: none; margin-top: 10px; font-size: 0.8rem; }
+
         .comment-section { margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; }
-        .commento { background: #161b22; padding: 8px; border-radius: 6px; margin-bottom: 5px; font-size: 0.9rem; border: 1px solid #222; }
+        .commento { background: #161b22; padding: 8px; border-radius: 6px; margin-bottom: 5px; font-size: 0.8rem; border: 1px solid #222; }
         .input-commento { width: 100%; padding: 8px; background: #0b0e14; border: 1px solid #333; color: white; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
 
         .input-admin { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; background: #0d1117; color: white; box-sizing: border-box; }
@@ -57,7 +60,9 @@
 
         <div id="nuovo-avviso-box" style="display:none; background:var(--card); padding:15px; border-radius:10px; border:2px solid var(--accent); margin-bottom:20px;">
             <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi avviso..."></textarea>
-            <button onclick="window.pubblicaNuovo()" style="width:100%; background:var(--success); color:white;">PUBBLICA ORA</button>
+            <label style="font-size: 0.8rem; color: #aaa;">Allega Immagine o PDF (max 2MB):</label>
+            <input type="file" id="file-nuovo" class="input-admin" accept="image/*,.pdf" style="font-size: 0.8rem;">
+            <button id="btn-pubblica" onclick="window.pubblicaNuovo()" style="width:100%; background:var(--success); color:white;">PUBBLICA AVVISO</button>
             <button onclick="document.getElementById('nuovo-avviso-box').style.display='none'" style="width:100%; background:none; color:gray; margin-top:5px;">Annulla</button>
         </div>
         
@@ -69,12 +74,7 @@
         <input type="text" id="new-u" class="input-admin" placeholder="Username">
         <input type="text" id="new-p" class="input-admin" placeholder="Password">
         <button onclick="window.aggiungiUtente()" style="width:100%; background:var(--success); color:white; margin-bottom:10px;">AGGIUNGI</button>
-        
-        <div style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
-            <p style="font-size:0.8rem; color:gray;">Utenti nel database:</p>
-            <div id="lista-utenti-container">Caricamento lista...</div>
-        </div>
-        
+        <div id="lista-utenti-container" style="max-height:300px; overflow-y:auto; border-top:1px solid #333; padding-top:10px;"></div>
         <button onclick="document.getElementById('modal-dev').style.display='none'" style="width:100%; background:#eee; color:black; margin-top:15px;">Chiudi</button>
     </div></div>
 
@@ -91,6 +91,7 @@
         <input type="text" id="l-user" class="input-admin" placeholder="Username">
         <input type="password" id="l-pass" class="input-admin" placeholder="Password">
         <button onclick="window.eseguiLogin()" style="width:100%; background:var(--accent); color:black;">ACCEDI</button>
+        <button onclick="document.getElementById('modal-login').style.display='none'" style="width:100%; background:none; color:gray; margin-top:10px;">Chiudi</button>
     </div></div>
 
     <script type="module">
@@ -105,22 +106,35 @@
         const db = getDatabase(app);
         let session = { user: "Ospite" };
 
-        // --- GESTIONE BACHECA ---
+        // --- GESTIONE BACHECA E ALLEGATI ---
         onValue(ref(db, 'teatro/bacheca_dati'), (snap) => {
             const area = document.getElementById('area-bacheca');
             area.innerHTML = "";
             const dati = snap.val() || {};
             Object.keys(dati).reverse().forEach(id => {
                 const a = dati[id];
+                
+                // Gestione file allegato
+                let fileHTML = "";
+                if(a.fileData) {
+                    if(a.fileType.includes("image")) {
+                        fileHTML = `<img src="${a.fileData}" class="allegato-img">`;
+                    } else if(a.fileType.includes("pdf")) {
+                        fileHTML = `<a href="${a.fileData}" target="_blank" class="btn-pdf">📄 Apri Allegato PDF</a>`;
+                    }
+                }
+
                 let comms = "";
                 if(a.commenti) {
                     Object.values(a.commenti).forEach(c => {
-                        comms += `<div class="commento"><div style="font-size:0.7rem; color:gray;">${c.autore}</div>${c.testo}</div>`;
+                        comms += `<div class="commento"><b style="color:var(--accent); font-size:0.7rem;">${c.autore}:</b> ${c.testo}</div>`;
                     });
                 }
+
                 area.innerHTML += `
                     <div class="avviso-card">
                         <div style="white-space:pre-wrap;">${a.testo}</div>
+                        ${fileHTML}
                         <div class="mgr-btns"><button onclick="window.eliminaAvviso('${id}')" style="background:red; color:white; margin-top:10px; font-size:10px;">Elimina</button></div>
                         <div class="comment-section">
                             <div id="comments-${id}">${comms}</div>
@@ -130,12 +144,44 @@
             });
         });
 
-        window.pubblicaNuovo = () => {
+        window.pubblicaNuovo = async () => {
             const txt = document.getElementById('testo-nuovo').value;
-            if(!txt) return;
-            push(ref(db, 'teatro/bacheca_dati'), { testo: txt, autore: session.user, data: new Date().toLocaleDateString() });
-            document.getElementById('testo-nuovo').value = "";
-            document.getElementById('nuovo-avviso-box').style.display = 'none';
+            const fileInput = document.getElementById('file-nuovo');
+            const btn = document.getElementById('btn-pubblica');
+            
+            if(!txt && !fileInput.files[0]) return;
+            
+            btn.disabled = true;
+            btn.innerText = "Caricamento...";
+
+            let fileData = null;
+            let fileType = null;
+
+            if(fileInput.files[0]) {
+                const file = fileInput.files[0];
+                if(file.size > 2200000) { alert("File troppo grande! Massimo 2MB."); btn.disabled = false; btn.innerText = "PUBBLICA AVVISO"; return; }
+                
+                fileData = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(file);
+                });
+                fileType = file.type;
+            }
+
+            push(ref(db, 'teatro/bacheca_dati'), { 
+                testo: txt, 
+                autore: session.user, 
+                data: new Date().toLocaleDateString(),
+                fileData: fileData,
+                fileType: fileType
+            }).then(() => {
+                document.getElementById('testo-nuovo').value = "";
+                document.getElementById('file-nuovo').value = "";
+                document.getElementById('nuovo-avviso-box').style.display = 'none';
+                btn.disabled = false;
+                btn.innerText = "PUBBLICA AVVISO";
+            });
         };
 
         window.inviaCommento = (id, txt) => {
@@ -143,9 +189,9 @@
             push(ref(db, `teatro/bacheca_dati/${id}/commenti`), { testo: txt, autore: session.user });
         };
 
-        window.eliminaAvviso = (id) => { if(confirm("Eliminare?")) remove(ref(db, `teatro/bacheca_dati/${id}`)); };
+        window.eliminaAvviso = (id) => { if(confirm("Eliminare definitivamente l'avviso?")) remove(ref(db, `teatro/bacheca_dati/${id}`)); };
 
-        // --- GESTIONE UTENTI (FISSA) ---
+        // --- GESTIONE UTENTI ---
         onValue(ref(db, 'teatro/utenti'), (snap) => {
             const cont = document.getElementById('lista-utenti-container');
             cont.innerHTML = "";
@@ -160,8 +206,8 @@
             }
         });
 
-        window.saveU = (id) => update(ref(db, `teatro/utenti/${id}`), { username: document.getElementById(`u-${id}`).value, password: document.getElementById(`p-${id}`).value });
-        window.remU = (id) => remove(ref(db, `teatro/utenti/${id}`));
+        window.saveU = (id) => update(ref(db, `teatro/utenti/${id}`), { username: document.getElementById(`u-${id}`).value, password: document.getElementById(`p-${id}`).value }).then(()=>alert("Aggiornato!"));
+        window.remU = (id) => { if(confirm("Eliminare questo utente?")) remove(ref(db, `teatro/utenti/${id}`)); };
         window.aggiungiUtente = () => {
             const u = document.getElementById('new-u').value;
             const p = document.getElementById('new-p').value;
@@ -180,7 +226,7 @@
                 onValue(ref(db, 'teatro/utenti'), (s) => {
                     let ok = false; const users = s.val() || {};
                     for(let id in users) { if(users[id].username === u && users[id].password === p) { attivaSessione("manager", u); ok = true; break; } }
-                    if(!ok) alert("Dati errati!");
+                    if(!ok) alert("Accesso negato!");
                 }, {onlyOnce: true});
             }
         };
@@ -210,19 +256,17 @@
                 document.getElementById('timer-nome').innerText = ev.nome;
                 setInterval(() => {
                     const diff = new Date(ev.data).getTime() - new Date().getTime();
-                    if(diff > 0) {
-                        const d = Math.floor(diff / 86400000);
-                        const h = Math.floor((diff % 86400000) / 3600000);
-                        const m = Math.floor((diff % 3600000) / 60000);
-                        const s = Math.floor((diff % 60000) / 1000);
-                        document.getElementById('timer-countdown').innerText = `${d}g ${h}h ${m}m ${s}s`;
-                    } else document.getElementById('timer-countdown').innerText = "IN CORSO";
+                    const d = Math.floor(diff / 86400000);
+                    const h = Math.floor((diff % 86400000) / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
+                    const s = Math.floor((diff % 60000) / 1000);
+                    document.getElementById('timer-countdown').innerText = diff > 0 ? `${d}g ${h}h ${m}m ${s}s` : "IN CORSO";
                 }, 1000);
             }
         });
 
         window.salvaTuttoBanner = () => {
-            update(ref(db, 'teatro/titoli'), { t1: document.getElementById('banner-titolo').innerText, t2: document.getElementById('banner-desc').innerText }).then(() => alert("Ok!"));
+            update(ref(db, 'teatro/titoli'), { t1: document.getElementById('banner-titolo').innerText, t2: document.getElementById('banner-desc').innerText }).then(() => alert("Titoli aggiornati!"));
         };
 
         onValue(ref(db, 'teatro/titoli'), (s) => {
@@ -231,4 +275,3 @@
     </script>
 </body>
 </html>
-
