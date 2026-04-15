@@ -23,8 +23,11 @@
         #timer-countdown { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
 
         .avviso-card { background: #0d1117; border-left: 5px solid var(--accent); padding: 18px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .comment-section { margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; }
+        .commento { background: #161b22; padding: 8px; border-radius: 6px; margin-bottom: 5px; font-size: 0.9rem; border: 1px solid #222; }
+        .input-commento { width: 100%; padding: 8px; background: #0b0e14; border: 1px solid #333; color: white; border-radius: 6px; margin-top: 8px; box-sizing: border-box; }
+
         .input-admin { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; background: #0d1117; color: white; box-sizing: border-box; }
-        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
         .modal-content { max-width: 450px; margin: 40px auto; background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
         
@@ -51,31 +54,36 @@
             <div id="timer-nome" style="color:gray; font-size:0.8rem;"></div>
             <div id="timer-countdown"></div>
         </div>
+
+        <div id="nuovo-avviso-box" style="display:none; background:var(--card); padding:15px; border-radius:10px; border:2px solid var(--accent); margin-bottom:20px;">
+            <textarea id="testo-nuovo" class="input-admin" rows="3" placeholder="Scrivi avviso..."></textarea>
+            <button onclick="window.pubblicaNuovo()" style="width:100%; background:var(--success); color:white;">PUBBLICA ORA</button>
+            <button onclick="document.getElementById('nuovo-avviso-box').style.display='none'" style="width:100%; background:none; color:gray; margin-top:5px;">Annulla</button>
+        </div>
         
-        <div id="area-bacheca">Caricamento...</div>
+        <div id="area-bacheca">Caricamento bacheca...</div>
     </div>
 
     <div id="modal-dev" class="modal"><div class="modal-content">
-        <h3 style="margin-top:0;">👥 Gestione Utenti</h3>
+        <h3>👥 Gestione Utenti</h3>
+        <input type="text" id="new-u" class="input-admin" placeholder="Username">
+        <input type="text" id="new-p" class="input-admin" placeholder="Password">
+        <button onclick="window.aggiungiUtente()" style="width:100%; background:var(--success); color:white; margin-bottom:10px;">AGGIUNGI</button>
         
-        <input type="text" id="new-u" class="input-admin" placeholder="Nuovo Username">
-        <input type="text" id="new-p" class="input-admin" placeholder="Nuova Password">
-        <button onclick="window.aggiungiUtente()" style="width:100%; background:var(--success); color:white; margin-bottom:10px;">AGGIUNGI UTENTE</button>
-        
-        <button onclick="window.toggleListaUtenti()" style="width:100%; background:#1f6feb; color:white; margin-bottom:10px;">🔍 VISUALIZZA / NASCONDI UTENTI</button>
-        <div id="lista-utenti-container" style="display:none; max-height:200px; overflow-y:auto; margin-top:10px; border-top:1px solid #333; padding-top:10px;"></div>
+        <div style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
+            <p style="font-size:0.8rem; color:gray;">Utenti nel database:</p>
+            <div id="lista-utenti-container">Caricamento lista...</div>
+        </div>
         
         <button onclick="document.getElementById('modal-dev').style.display='none'" style="width:100%; background:#eee; color:black; margin-top:15px;">Chiudi</button>
     </div></div>
 
     <div id="modal-evento" class="modal"><div class="modal-content">
         <h3>⏲️ Imposta Timer</h3>
-        <label>Nome Evento:</label>
-        <input type="text" id="ev-nome" class="input-admin" placeholder="Es: Festa di Primavera">
-        <label>Data e Ora:</label>
+        <input type="text" id="ev-nome" class="input-admin" placeholder="Nome Evento">
         <input type="datetime-local" id="ev-data" class="input-admin">
-        <button onclick="window.salvaEvento()" style="width:100%; background:var(--success); color:white; margin-bottom:10px;">ATTIVA TIMER</button>
-        <button onclick="document.getElementById('modal-evento').style.display='none'" style="width:100%; background:var(--danger); color:white;">ANNULLA E ESCI</button>
+        <button onclick="window.salvaEvento()" style="width:100%; background:var(--success); color:white; margin-bottom:10px;">SALVA</button>
+        <button onclick="document.getElementById('modal-evento').style.display='none'" style="width:100%; background:var(--danger); color:white;">Chiudi</button>
     </div></div>
 
     <div id="modal-login" class="modal"><div class="modal-content">
@@ -95,101 +103,90 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        let session = { user: null };
+        let session = { user: "Ospite" };
 
-        // --- FUNZIONI UTENTI ---
-        window.apriPannelloDev = () => document.getElementById('modal-dev').style.display = 'block';
+        // --- GESTIONE BACHECA ---
+        onValue(ref(db, 'teatro/bacheca_dati'), (snap) => {
+            const area = document.getElementById('area-bacheca');
+            area.innerHTML = "";
+            const dati = snap.val() || {};
+            Object.keys(dati).reverse().forEach(id => {
+                const a = dati[id];
+                let comms = "";
+                if(a.commenti) {
+                    Object.values(a.commenti).forEach(c => {
+                        comms += `<div class="commento"><div style="font-size:0.7rem; color:gray;">${c.autore}</div>${c.testo}</div>`;
+                    });
+                }
+                area.innerHTML += `
+                    <div class="avviso-card">
+                        <div style="white-space:pre-wrap;">${a.testo}</div>
+                        <div class="mgr-btns"><button onclick="window.eliminaAvviso('${id}')" style="background:red; color:white; margin-top:10px; font-size:10px;">Elimina</button></div>
+                        <div class="comment-section">
+                            <div id="comments-${id}">${comms}</div>
+                            <input type="text" class="input-commento" placeholder="Scrivi un commento..." onkeydown="if(event.key==='Enter') window.inviaCommento('${id}', this.value); if(event.key==='Enter') this.value='';">
+                        </div>
+                    </div>`;
+            });
+        });
 
-        window.toggleListaUtenti = () => {
+        window.pubblicaNuovo = () => {
+            const txt = document.getElementById('testo-nuovo').value;
+            if(!txt) return;
+            push(ref(db, 'teatro/bacheca_dati'), { testo: txt, autore: session.user, data: new Date().toLocaleDateString() });
+            document.getElementById('testo-nuovo').value = "";
+            document.getElementById('nuovo-avviso-box').style.display = 'none';
+        };
+
+        window.inviaCommento = (id, txt) => {
+            if(!txt.trim()) return;
+            push(ref(db, `teatro/bacheca_dati/${id}/commenti`), { testo: txt, autore: session.user });
+        };
+
+        window.eliminaAvviso = (id) => { if(confirm("Eliminare?")) remove(ref(db, `teatro/bacheca_dati/${id}`)); };
+
+        // --- GESTIONE UTENTI (FISSA) ---
+        onValue(ref(db, 'teatro/utenti'), (snap) => {
             const cont = document.getElementById('lista-utenti-container');
-            if(cont.style.display === "none") {
-                cont.style.display = "block";
-                onValue(ref(db, 'teatro/utenti'), (snap) => {
-                    cont.innerHTML = "";
-                    const u = snap.val() || {};
-                    for(let id in u) {
-                        const div = document.createElement('div');
-                        div.className = "user-row";
-                        div.innerHTML = `
-                            <input type="text" value="${u[id].username}" id="u-${id}">
-                            <input type="text" value="${u[id].password}" id="p-${id}">
-                            <button onclick="window.salvaModUtente('${id}')" style="background:green; color:white; padding:5px;">💾</button>
-                            <button onclick="window.rimuoviUtente('${id}')" style="background:red; color:white; padding:5px;">🗑️</button>
-                        `;
-                        cont.appendChild(div);
-                    }
-                });
-            } else {
-                cont.style.display = "none";
-            }
-        };
-
-        window.salvaModUtente = (id) => {
-            const username = document.getElementById(`u-${id}`).value;
-            const password = document.getElementById(`p-${id}`).value;
-            update(ref(db, `teatro/utenti/${id}`), { username, password }).then(() => alert("Salvato!"));
-        };
-
-        window.rimuoviUtente = (id) => { if(confirm("Eliminare?")) remove(ref(db, `teatro/utenti/${id}`)); };
-
-        window.aggiungiUtente = () => {
-            const u = document.getElementById('new-u').value;
-            const p = document.getElementById('new-p').value;
-            if(u && p) {
-                push(ref(db, 'teatro/utenti'), { username: u, password: p });
-                document.getElementById('new-u').value = ""; document.getElementById('new-p').value = "";
-                alert("Utente aggiunto!");
-            }
-        };
-
-        // --- TIMER ---
-        window.salvaEvento = () => {
-            const nome = document.getElementById('ev-nome').value;
-            const data = document.getElementById('ev-data').value;
-            if(nome && data) {
-                set(ref(db, 'teatro/evento'), { nome, data }).then(() => {
-                    alert("Timer Attivato!");
-                    document.getElementById('modal-evento').style.display = 'none';
-                });
-            } else { alert("Inserisci nome e data!"); }
-        };
-
-        onValue(ref(db, 'teatro/evento'), (snap) => {
-            const ev = snap.val();
-            const disp = document.getElementById('timer-display');
-            if(ev && ev.data) {
-                disp.style.display = "block";
-                document.getElementById('timer-nome').innerText = ev.nome;
-                setInterval(() => {
-                    const diff = new Date(ev.data).getTime() - new Date().getTime();
-                    if(diff > 0) {
-                        const d = Math.floor(diff / 86400000);
-                        const h = Math.floor((diff % 86400000) / 3600000);
-                        const m = Math.floor((diff % 3600000) / 60000);
-                        const s = Math.floor((diff % 60000) / 1000);
-                        document.getElementById('timer-countdown').innerText = `${d}g ${h}h ${m}m ${s}s`;
-                    } else { document.getElementById('timer-countdown').innerText = "EVENTO IN CORSO"; }
-                }, 1000);
+            cont.innerHTML = "";
+            const u = snap.val() || {};
+            for(let id in u) {
+                cont.innerHTML += `<div class="user-row">
+                    <input type="text" value="${u[id].username}" id="u-${id}">
+                    <input type="text" value="${u[id].password}" id="p-${id}">
+                    <button onclick="window.saveU('${id}')" style="background:green; color:white;">💾</button>
+                    <button onclick="window.remU('${id}')" style="background:red; color:white;">🗑️</button>
+                </div>`;
             }
         });
 
-        // --- LOGIN & AVVISI (Base) ---
+        window.saveU = (id) => update(ref(db, `teatro/utenti/${id}`), { username: document.getElementById(`u-${id}`).value, password: document.getElementById(`p-${id}`).value });
+        window.remU = (id) => remove(ref(db, `teatro/utenti/${id}`));
+        window.aggiungiUtente = () => {
+            const u = document.getElementById('new-u').value;
+            const p = document.getElementById('new-p').value;
+            if(u && p) { push(ref(db, 'teatro/utenti'), { username: u, password: p }); document.getElementById('new-u').value=""; document.getElementById('new-p').value=""; }
+        };
+
+        window.apriPannelloDev = () => document.getElementById('modal-dev').style.display = 'block';
+
+        // --- LOGIN & TIMER ---
         window.apriLogin = () => document.getElementById('modal-login').style.display = 'block';
         window.eseguiLogin = () => {
             const u = document.getElementById('l-user').value;
             const p = document.getElementById('l-pass').value;
-            if(u === "manuel.manera" && p === "PeppinoBomber") attivaSessione("admin");
+            if(u === "manuel.manera" && p === "PeppinoBomber") attivaSessione("admin", u);
             else {
                 onValue(ref(db, 'teatro/utenti'), (s) => {
                     let ok = false; const users = s.val() || {};
-                    for(let id in users) { if(users[id].username === u && users[id].password === p) { attivaSessione("manager"); ok = true; break; } }
-                    if(!ok) alert("Credenziali errate!");
+                    for(let id in users) { if(users[id].username === u && users[id].password === p) { attivaSessione("manager", u); ok = true; break; } }
+                    if(!ok) alert("Dati errati!");
                 }, {onlyOnce: true});
             }
         };
 
-        function attivaSessione(tipo) {
-            session.user = document.getElementById('l-user').value || "Admin";
+        function attivaSessione(tipo, nome) {
+            session.user = nome;
             document.body.classList.add('manager-active');
             if(tipo === "admin") {
                 document.body.classList.add('dev-mode', 'can-edit-titles');
@@ -200,21 +197,32 @@
             document.getElementById('btn-login-main').style.display = 'none';
         }
 
-        onValue(ref(db, 'teatro/bacheca_dati'), (snap) => {
-            const area = document.getElementById('area-bacheca'); area.innerHTML = "";
-            const dati = snap.val() || {};
-            Object.keys(dati).reverse().forEach(id => {
-                const a = dati[id];
-                area.innerHTML += `<div class="avviso-card">
-                    <div>${a.testo}</div>
-                    <div class="mgr-btns"><button onclick="window.eliminaAvviso('${id}')" style="background:red; color:white; margin-top:10px; font-size:10px;">Elimina</button></div>
-                </div>`;
-            });
+        window.salvaEvento = () => {
+            const n = document.getElementById('ev-nome').value;
+            const d = document.getElementById('ev-data').value;
+            if(n && d) set(ref(db, 'teatro/evento'), { nome: n, data: d }).then(() => document.getElementById('modal-evento').style.display = 'none');
+        };
+
+        onValue(ref(db, 'teatro/evento'), (snap) => {
+            const ev = snap.val();
+            if(ev && ev.data) {
+                document.getElementById('timer-display').style.display = "block";
+                document.getElementById('timer-nome').innerText = ev.nome;
+                setInterval(() => {
+                    const diff = new Date(ev.data).getTime() - new Date().getTime();
+                    if(diff > 0) {
+                        const d = Math.floor(diff / 86400000);
+                        const h = Math.floor((diff % 86400000) / 3600000);
+                        const m = Math.floor((diff % 3600000) / 60000);
+                        const s = Math.floor((diff % 60000) / 1000);
+                        document.getElementById('timer-countdown').innerText = `${d}g ${h}h ${m}m ${s}s`;
+                    } else document.getElementById('timer-countdown').innerText = "IN CORSO";
+                }, 1000);
+            }
         });
 
-        window.eliminaAvviso = (id) => remove(ref(db, `teatro/bacheca_dati/${id}`));
         window.salvaTuttoBanner = () => {
-            update(ref(db, 'teatro/titoli'), { t1: document.getElementById('banner-titolo').innerText, t2: document.getElementById('banner-desc').innerText }).then(() => alert("Titoli salvati!"));
+            update(ref(db, 'teatro/titoli'), { t1: document.getElementById('banner-titolo').innerText, t2: document.getElementById('banner-desc').innerText }).then(() => alert("Ok!"));
         };
 
         onValue(ref(db, 'teatro/titoli'), (s) => {
